@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GOES - Sistema de Asistencia</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+ body {
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+        font-family: 'Anaheim', sans-serif;
+        background: #f0f2f5;
+        position: relative;
+        overflow-x: hidden;
+    }
+
+    /* Patrón de fondo tipo "shield" o escudo */
+    body::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: 
+            linear-gradient(135deg, rgba(255, 107, 1, 0.1) 0%, transparent 100%),
+            repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 10px,
+                rgba(80, 80, 80, 0.03) 10px,
+                rgba(80, 80, 80, 0.03) 11px
+            ),
+            repeating-linear-gradient(
+                -45deg,
+                transparent,
+                transparent 10px,
+                rgba(255, 107, 1, 0.03) 10px,
+                rgba(255, 107, 1, 0.03) 11px
+            );
+        z-index: -1;
+    }
+
+    .background-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+        opacity: 0.03;
+        background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MCIgaGVpZ2h0PSI1MCIgdmlld0JveD0iMCAwIDUwIDUwIj48cGF0aCBkPSJNMjUgNUwxMCAxNXYyMGwxNSAxMGwxNS0xMFYxNUwyNSA1em0wIDVsLTEwIDd2MTZsMTAgN2wxMC03VjE3TDI1IDEweiIgZmlsbD0iIzAwMCIvPjwvc3ZnPg==');
+        background-repeat: repeat;
+    }
+
+    /* Mejoras para el contenido existente */
+    .container {
+        backdrop-filter: blur(10px);
+        background: rgba(255, 255, 255, 0.8);
+        border-radius: 20px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        margin: 20px;
+        padding: 20px;
+    }
+
+    .menu-item {
+        background: #ffffff;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .menu-item::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        width: 3px;
+        background: #ff6b01;
+        transform: scaleY(0);
+        transition: transform 0.3s ease;
+    }
+
+    .menu-item:hover {
+        transform: translateX(5px);
+        box-shadow: 0 5px 15px rgba(255, 107, 1, 0.1);
+        border-color: rgba(255, 107, 1, 0.2);
+    }
+    
+        #sidebar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+            height: 85px;
+            transition: height 0.3s ease;
+        }
+    
+        #sidebar.collapsed {
+            height: 25px;
+        }
+    
+        #sidebar.collapsed .nav-buttons {
+            opacity: 0;
+            visibility: hidden;
+        }
+    
+        .sidebar-toggle {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 20px;
+            background: white;
+            border: none;
+            border-radius: 20px 20px 0 0;
+            box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #666;
+            z-index: 1001;
+        }
+    
+        .sidebar-toggle i {
+            transition: transform 0.3s ease;
+        }
+    
+        #sidebar.collapsed .sidebar-toggle i {
+            transform: rotate(180deg);
+        }
+    
+        .nav-buttons {
+    display: flex;
+    align-items: center;
+    padding: 15px 16px;
+    gap: 15px;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    padding-bottom: calc(15px + env(safe-area-inset-bottom));
+}
+    
+        .nav-button {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: #666;
+            font-size: 0.9em;
+            cursor: pointer;
+            border: none;
+            background: none;
+            padding: 8px;
+            min-width: 64px;
+            transition: color 0.3s ease;
+        }
+    
+        .nav-button i {
+            font-size: 1.5em;
+            margin-bottom: 5px;
+        }
+    
+        .nav-button.active {
+            color: #FF8C00;
+        }
+    
+        .nav-button:hover {
+            color: #FF8C00;
+        }
+    
+        #registrarBtn {
+            background: #FF8C00;
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            margin: 20px auto;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+    
+        #registrarBtn:active {
+            transform: scale(0.98);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+    
+        #registrarBtn:hover {
+            background: #FF7F00;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+    
+        @media (max-width: 320px) {
+            .welcome-message h2 {
+                font-size: 1.3rem;
+            }
+    
+            .welcome-message p {
+                font-size: 0.9rem;
+            }
+    
+            #registrarBtn {
+                padding: 14px 28px;
+                font-size: 1rem;
+            }
+    
+            .nav-button {
+                font-size: 0.8em;
+            }
+        }
+    
+        /* Mejoras para dispositivos táctiles */
+        @media (hover: none) {
+            .nav-button:active {
+                color: #FF8C00;
+            }
+        }
+
+        /* Agregar después de los estilos existentes */
+#contentFrame {
+    width: 100%;
+    height: calc(100vh - 100px);
+    border: none;
+    transition: height 0.3s ease;
+}
+
+.menu-container {
+    max-width: 600px;
+    margin: 20px auto;
+    padding: 0 16px;
+}
+
+.menu-item {
+    background: white;
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.menu-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.menu-item i {
+    font-size: 1.5em;
+    color: #FF8C00;
+}
+
+.menu-item-content {
+    flex: 1;
+}
+
+.menu-item-title {
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.menu-item-description {
+    font-size: 0.9em;
+    color: #666;
+}
+
+.menu-item .fa-chevron-right {
+    color: #999;
+            font-size: 1.2em;
+        }
+
+        .user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 16px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin-right: auto; /* Empuja los otros botones hacia la derecha */
+}
+
+.user-info i {
+    font-size: 1.8em;
+    color: #FF8C00;
+}
+
+.user-details {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+}
+
+#userName {
+    font-weight: 500;
+    color: #2c3e50;
+}
+
+.user-role {
+    font-size: 0.8em;
+    color: #666;
+}
+
+/* Ajustar responsive */
+@media (max-width: 480px) {
+    .user-info {
+        padding: 8px;
+    }
+    
+    .user-details span {
+        font-size: 0.9em;
+    }
+    
+    .nav-button span {
+        display: none;
+    }
+    
+    .nav-button i {
+        margin-bottom: 0;
+    }
+}
+
+    </style>
+</head>
+<body>
+    <div class="background-overlay"></div>
+    <div id="mainContent">
+    <iframe id="contentFrame" style="display: none;"></iframe>
+    <div id="menuContent">
+        <div class="menu-container">
+            <div class="menu-item" onclick="loadFrame('registro.html')">
+                <i class="fas fa-qrcode"></i>
+                <div class="menu-item-content">
+                    <div class="menu-item-title">Registrar Asistencia</div>
+                    <div class="menu-item-description">Escanea el código QR de tu unidad</div>
+                </div>
+                <i class="fas fa-chevron-right"></i>
+            </div>
+            
+            <div class="menu-item" onclick="loadFrame('ronda.html')">
+                <i class="fas fa-clipboard-check"></i>
+                <div class="menu-item-content">
+                    <div class="menu-item-title">Ronda de Supervisión</div>
+                    <div class="menu-item-description">Registra la inspección de la unidad</div>
+                </div>
+                <i class="fas fa-chevron-right"></i>
+            </div>
+    
+            <div class="menu-item" onclick="loadFrame('ronda_interna.html')">
+                <i class="fas fa-walking"></i>
+                <div class="menu-item-content">
+                    <div class="menu-item-title">Ronda Interna</div>
+                    <div class="menu-item-description">Registra la ronda interna de la unidad</div>
+                </div>
+                <i class="fas fa-chevron-right"></i>
+            </div>
+            <div class="menu-item" onclick="loadFrame('control_unidades.html')">
+                <i class="fas fa-building"></i>
+                <div class="menu-item-content">
+                    <div class="menu-item-title">Control de Unidades</div>
+                    <div class="menu-item-description">Monitorea la asistencia en las unidades</div>
+                </div>
+                <i class="fas fa-chevron-right"></i>
+            </div>
+            <div class="menu-item" onclick="loadFrame('admin_unidades.html')">
+                <i class="fas fa-cogs"></i>
+                <div class="menu-item-content">
+                    <div class="menu-item-title">Administración de Unidades</div>
+                    <div class="menu-item-description">Gestiona la configuración de las unidades</div>
+                </div>
+                <i class="fas fa-chevron-right"></i>
+            </div>
+            <div class="menu-item" onclick="loadFrame('control_rondas.html')">
+                <i class="fas fa-clipboard-check"></i>
+                <div class="menu-item-content">
+                    <div class="menu-item-title">Control de Rondas</div>
+                    <div class="menu-item-description">Monitoreo y análisis de rondas de supervisión</div>
+                </div>
+                <i class="fas fa-chevron-right"></i>
+            </div>
+            <div class="menu-item" onclick="loadFrame('control_rondas_internas.html')">
+                <i class="fas fa-route"></i>
+                <div class="menu-item-content">
+                    <div class="menu-item-title">Control de Rondas Internas</div>
+                    <div class="menu-item-description">Monitoreo y gestión de rondas internas</div>
+                </div>
+                <i class="fas fa-chevron-right"></i>
+            </div>
+            <div class="menu-item" onclick="loadFrame('admin_puntos_ronda.html')">
+                <i class="fas fa-map-marker-alt"></i>
+                <div class="menu-item-content">
+                    <div class="menu-item-title">Puntos de Ronda</div>
+                    <div class="menu-item-description">Administración de puntos de control para rondas</div>
+                </div>
+                <i class="fas fa-chevron-right"></i>
+            </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+        </div>
+    </div>
+</div>
+
+<div id="sidebar">
+    <button class="sidebar-toggle" id="sidebarToggle">
+        <i class="fas fa-chevron-up"></i>
+    </button>
+    <div class="nav-buttons">
+        <!-- Agregar el div de información de usuario -->
+        <div class="user-info">
+            <i class="fas fa-user-circle"></i>
+            <div class="user-details">
+                <span id="userName">Cargando...</span>
+                <span id="userRole" class="user-role">Cargando...</span>
+            </div>
+        </div>
+        
+        <button class="nav-button active" onclick="showMenu()">
+            <i class="fas fa-bars"></i>
+            <span>Menú</span>
+        </button>
+        <button class="nav-button" onclick="showMenu()">
+            <i class="fas fa-arrow-left"></i>
+            <span>Volver</span>
+        </button>
+        <button class="nav-button" onclick="logout()">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Cerrar Sesión</span>
+        </button>
+    </div>
+</div>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

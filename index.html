@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GOES - Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #FF8C00 0%, #808080 100%);
+        }
+
+        .login-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 400px;
+        }
+
+        .logo {
+            width: 100%;
+            max-width: 300px;
+            margin: 0 auto 2rem;
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #4a5568;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        button {
+            width: 100%;
+            padding: 0.75rem;
+            background: #FF8C00;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        button:hover {
+            background: #FF7F00;
+        }
+
+        .error-message {
+            color: #e53e3e;
+            margin-top: 1rem;
+            text-align: center;
+            display: none;
+        }
+        .input-group {
+    position: relative;
+}
+
+.sugerencias-container {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.sugerencia-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.sugerencia-item:hover {
+    background-color: #f5f5f5;
+}
+
+.sugerencia-item.selected {
+            background-color: #e8f0fe;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <img src="https://goesperu.com/wp-content/uploads/2024/08/771x216.png" alt="GOES Peru Logo" class="logo">
+        <form id="loginForm">
+            <div class="input-group">
+                <i class="fas fa-user"></i>
+                <input type="text" id="username" name="username" placeholder="Usuario" autocomplete="off" required>
+                <div id="sugerencias" class="sugerencias-container"></div>
+            </div>
+            <div class="input-group">
+                <i class="fas fa-lock"></i>
+                <input type="password" id="password" name="password" placeholder="Contraseña" required>
+            </div>
+            <div id="errorMessage" class="error-message"></div>
+            <button type="submit">Iniciar Sesión</button>
+        </form>
+    </div>
+    <script src="js/login.js"></script>
+</body>
+</html>
