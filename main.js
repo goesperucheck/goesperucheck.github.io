@@ -1,10 +1,10 @@
 // Definir la configuración de accesos por rol
 const ROLE_ACCESS = {
     'PERSONAL DE SEGURIDAD': ['registro.html', 'ronda_interna.html'],
-    'SUPERVISOR': ['registro.html', 'ronda.html', 'ronda_interna.html'],
-    'OPERADOR': ['registro.html', 'control_unidades.html', 'control_rondas.html', 'control_rondas_internas.html', 'admin_unidades.html', 'admin_puntos_ronda.html'],
-    'COORDINADOR': ['registro.html', 'control_unidades.html', 'control_rondas.html', 'control_rondas_internas.html'],
-    'ADMINISTRADOR': ['registro.html', 'ronda.html', 'ronda_interna.html', 'control_unidades.html', 'admin_unidades.html', 'control_rondas.html', 'control_rondas_internas.html', 'admin_puntos_ronda.html']
+    'SUPERVISOR': ['registro.html', 'ronda.html', 'ronda_interna.html', 'reporteResguardo.html'],
+    'OPERADOR': ['registro.html', 'control_unidades.html', 'control_rondas.html', 'control_rondas_internas.html', 'admin_unidades.html', 'admin_puntos_ronda.html', 'reporteResguardo.html', 'transporte.html', 'controlcustodias.html'],
+    'COORDINADOR': ['registro.html', 'control_unidades.html', 'control_rondas.html', 'control_rondas_internas.html', 'reporteResguardo.html'],
+    'ADMINISTRADOR': ['registro.html', 'ronda.html', 'ronda_interna.html', 'control_unidades.html', 'admin_unidades.html', 'control_rondas.html', 'control_rondas_internas.html', 'admin_puntos_ronda.html', 'reporteResguardo.html', 'transporte.html', 'controlcustodias.html']
 };
 
 // Mapeo de URLs a información del menú
@@ -43,6 +43,21 @@ const MENU_ITEMS = {
         icon: 'fas fa-route',
         title: 'Control de Rondas Internas',
         description: 'Monitoreo y gestión de rondas internas'
+    },
+    'reporteResguardo.html': {
+        icon: 'fas fa-gun',
+        title: 'Reporte durante Custodias',
+        description: 'Reporta novedades durante el servicio(Solo Resguardos)'
+    },
+    'transporte.html': {
+        icon: 'fas fa-truck',
+        title: 'Asignación de Servicios',
+        description: 'Crea servicios // Asigna resguardos'
+    },
+    'controlcustodias.html': {
+        icon: 'fas fa-shield',
+        title: 'Control de Custodias',
+        description: 'Controla el servicio de ccustodia'
     },
     'admin_puntos_ronda.html': {
         icon: 'fas fa-map-marker-alt',
