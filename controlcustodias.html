@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reporte de Resguardos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Reutilizamos los estilos base de control_unidades.html */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Anaheim', sans-serif;
+        }
+
+        body {
+            background: #f5f7fa;
+            padding: 20px;
+            color: #2c3e50;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        /* Estilos para la tabla */
+        .resultados-tabla {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 30px;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .resultados-tabla th,
+        .resultados-tabla td {
+            padding: 15px 20px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .resultados-tabla th {
+            background-color: #f8f9fa;
+            font-weight: 500;
+            color: #2c3e50;
+        }
+
+        /* Estilos para botones */
+        .btn-action {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 0 5px;
+            font-size: 14px;
+        }
+
+        .btn-foto { background: #3498db; }
+        .btn-ubicacion { background: #2ecc71; }
+
+        /* Estilos para modales (reutilizados de tu código) */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 600px;
+            border-radius: 8px;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        #fotoModal img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+        }
+
+        #mapaFrame {
+            width: 100%;
+            height: 400px;
+            border: none;
+            border-radius: 4px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #3498db;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2><i class="fas fa-shield-alt"></i> Reporte de Resguardos</h2>
+        
+        <div id="loading" class="loading">
+            <i class="fas fa-spinner fa-spin"></i> Cargando...
+        </div>
+
+        <div id="resultados"></div>
+    </div>
+
+    <!-- Modal para Fotos -->
+    <div id="fotoModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <img id="fotoEvidencia" src="" alt="Evidencia">
+        </div>
+    </div>
+
+    <!-- Modal para Mapa -->
+    <div id="mapaModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <iframe id="mapaFrame"></iframe>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://script.google.com/macros/s/AKfycbxT9Cq9EmOpsPB3jalrVEhnVwAUxl8NS0A27rwO-2V7/dev';
+
+        document.addEventListener('DOMContentLoaded', function() {
+            cargarResguardos();
+        });
+
+        function cargarResguardos() {
+            mostrarCargando(true);
+            const script = document.createElement('script');
+            const callback = 'callback_' + Math.random().toString(36).substr(2, 9);
+
+            window[callback] = function(response) {
+                mostrarCargando(false);
+                if (response.success) {
+                    mostrarResultados(response.data);
+                }
+                delete window[callback];
+                document.body.removeChild(script);
+            };
+
+            script.src = `${API_URL}?action=obtenerResguardos&callback=${callback}`;
+            document.body.appendChild(script);
+        }
+
+        function mostrarResultados(datos) {
+    const container = document.getElementById('resultados');
+    
+    const tabla = `
+        <table class="resultados-tabla">
+            <thead>
+                <tr>
+                    <th>Fecha/Hora</th>
+                    <th>Orden Transporte</th>
+                    <th>Usuario</th>
+                    <th>Detalles</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${datos.map(item => `
+                    <tr>
+                        <td>${new Date(item.fecha).toLocaleString()}</td>
+                        <td>${item.orden}</td>
+                        <td>${item.usuario}</td>
+                        <td>${item.detalles}</td>
+                        <td>
+                            <button class="btn-action btn-foto" onclick="mostrarFoto('${item.evidencia}')">
+                                <i class="fas fa-camera"></i>
+                            </button>
+                            <button class="btn-action btn-ubicacion" onclick="mostrarMapa('${item.ubicacion}')">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+    
+    container.innerHTML = tabla;
+}
+
+        function mostrarFoto(url) {
+            const modal = document.getElementById('fotoModal');
+            document.getElementById('fotoEvidencia').src = url;
+            modal.style.display = 'block';
+        }
+
+        function mostrarMapa(coordenadas) {
+            const modal = document.getElementById('mapaModal');
+            document.getElementById('mapaFrame').src = 
+                `https://www.google.com/maps?q=${coordenadas}&output=embed`;
+            modal.style.display = 'block';
+        }
+
+        function mostrarCargando(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+        }
+
+        // Cerrar modales
+        document.querySelectorAll('.close').forEach(btn => {
+            btn.onclick = function() {
+                this.closest('.modal').style.display = 'none';
+            }
+        });
+
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
