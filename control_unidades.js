@@ -1,4 +1,5 @@
 // Definir la URL del API
+
 const API_URL = 'https://script.google.com/macros/s/AKfycbxT9Cq9EmOpsPB3jalrVEhnVwAUxl8NS0A27rwO-2V7/dev';
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -129,4 +130,5 @@ function mostrarError(mensaje) {
     } else {
         alert(mensaje);
     }
+}
 }
