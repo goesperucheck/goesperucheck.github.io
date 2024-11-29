@@ -75,11 +75,17 @@ function cerrarModal() {
 }
 
 function confirmarRegistro() {
+    const btnRegistrar = document.getElementById('btnRegistrar');
     const turno = document.getElementById('modalTurno').value;
+    
     if (!turno) {
         showStatus('Por favor seleccione un turno', false);
         return;
     }
+
+    // Deshabilitar el botón y mostrar estado de carga
+    btnRegistrar.disabled = true;
+    btnRegistrar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
 
     const unidad = document.getElementById('modalUnidad').value;
     showStatus('Obteniendo ubicación precisa...', true);
@@ -90,14 +96,16 @@ function confirmarRegistro() {
                 console.log("Coordenadas recibidas:", {
                     lat: position.coords.latitude,
                     lng: position.coords.longitude,
-                    precision: position.coords.accuracy, // metros
+                    precision: position.coords.accuracy,
                     timestamp: new Date(position.timestamp).toLocaleString()
                 });
 
-                // Verificar la precisión
-                if (position.coords.accuracy > 100) { // más de 100 metros
+                if (position.coords.accuracy > 100) {
                     if (!confirm(`La precisión GPS es baja (${Math.round(position.coords.accuracy)} metros). ¿Desea continuar de todos modos?`)) {
                         showStatus('Registro cancelado. Intente en un lugar con mejor señal GPS', false);
+                        // Restaurar el botón si se cancela
+                        btnRegistrar.disabled = false;
+                        btnRegistrar.innerHTML = '<i class="fas fa-check"></i> Registrar';
                         return;
                     }
                 }
@@ -110,12 +118,15 @@ function confirmarRegistro() {
                     registrarAsistencia(unidad, turno, null);
                 } else {
                     showStatus('Registro cancelado', false);
+                    // Restaurar el botón si se cancela
+                    btnRegistrar.disabled = false;
+                    btnRegistrar.innerHTML = '<i class="fas fa-check"></i> Registrar';
                 }
             },
             {
-                enableHighAccuracy: true,    // Solicitar alta precisión
-                timeout: 10000,              // Aumentar timeout a 10 segundos
-                maximumAge: 0                // No usar cache
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
             }
         );
     } else {
@@ -123,18 +134,25 @@ function confirmarRegistro() {
             registrarAsistencia(unidad, turno, null);
         } else {
             showStatus('Registro cancelado', false);
+            // Restaurar el botón si se cancela
+            btnRegistrar.disabled = false;
+            btnRegistrar.innerHTML = '<i class="fas fa-check"></i> Registrar';
         }
     }
 }
 
 function registrarAsistencia(unidad, turno, position) {
+    const btnRegistrar = document.getElementById('btnRegistrar');
     const userData = JSON.parse(localStorage.getItem('user'));
     if (!userData) {
         showStatus('Error: Sesión no válida', false);
+        // Restaurar el botón en caso de error
+        btnRegistrar.disabled = false;
+        btnRegistrar.innerHTML = '<i class="fas fa-check"></i> Registrar';
         return;
     }
 
-    // Primero verificamos si ya marcó en este turno
+    // Verificación de marcación previa
     const script1 = document.createElement('script');
     const callback1 = 'jsonpCallback_' + Math.round(Math.random() * 1000000);
     
@@ -145,12 +163,28 @@ function registrarAsistencia(unidad, turno, position) {
             const asistencias = response.data;
             console.log('Asistencias del día:', asistencias);
             
-            // Verificar si ya hay una marcación en este turno
+            // Verificar marcación en la última hora
+            const ahora = new Date();
+            const marcacionReciente = asistencias.find(a => {
+                const fechaMarcacion = new Date(a.fecha);
+                const diferenciaMinutos = (ahora - fechaMarcacion) / (1000 * 60); // Diferencia en minutos
+                return a.usuario === userData.username && diferenciaMinutos < 60;
+            });
+
+            if (marcacionReciente) {
+                const tiempoRestante = Math.ceil(60 - ((ahora - new Date(marcacionReciente.fecha)) / (1000 * 60)));
+                showStatus(`Debes esperar ${tiempoRestante} minutos para volver a registrar asistencia`, false);
+                btnRegistrar.disabled = false;
+                btnRegistrar.innerHTML = '<i class="fas fa-check"></i> Registrar';
+                cerrarModal();
+                return;
+            }
+            
+            // Verificar marcación en el mismo turno
             const marcacionesHoy = asistencias.filter(a => {
                 const horaRegistro = new Date(a.fecha).getHours();
                 let esMismoTurno = false;
                 
-                // Determinar si está en el mismo turno
                 if (turno === 'D' && horaRegistro >= 5 && horaRegistro < 10) {
                     esMismoTurno = true;
                 } else if (turno === 'T' && horaRegistro >= 14 && horaRegistro < 17) {
@@ -159,30 +193,22 @@ function registrarAsistencia(unidad, turno, position) {
                     esMismoTurno = true;
                 }
                 
-                console.log('Verificando asistencia:', {
-                    asistencia: a,
-                    horaRegistro,
-                    esMismoTurno,
-                    mismaUnidad: a.unidad === unidad,
-                    mismoUsuario: a.usuario === userData.username
-                });
-
                 return a.unidad === unidad && 
                        a.usuario === userData.username &&
                        esMismoTurno;
             });
             
-            console.log('Marcaciones encontradas:', marcacionesHoy);
-            
             if (marcacionesHoy.length > 0) {
                 showStatus('Ya registraste tu asistencia en este turno', false);
-                document.getElementById('btnRegistrar').disabled = true; // Deshabilitamos el botón
                 cerrarModal();
                 return;
             }
             
-            // Si no hay marcación previa, procedemos con el registro
             enviarRegistro();
+        } else {
+            // Restaurar el botón en caso de error
+            btnRegistrar.disabled = false;
+            btnRegistrar.innerHTML = '<i class="fas fa-check"></i> Registrar';
         }
         
         document.body.removeChild(script1);
@@ -199,7 +225,6 @@ function registrarAsistencia(unidad, turno, position) {
     script1.src = `${API_URL}?${params1.toString()}`;
     document.body.appendChild(script1);
     
-    // Función para enviar el registro si pasa la validación
     function enviarRegistro() {
         const datos = {
             fecha: new Date().toISOString(),
@@ -221,6 +246,50 @@ function registrarAsistencia(unidad, turno, position) {
                 cerrarModal();
             } else {
                 showStatus('Error al registrar asistencia: ' + response.message, false);
+                // Restaurar el botón solo en caso de error
+                btnRegistrar.disabled = false;
+                btnRegistrar.innerHTML = '<i class="fas fa-check"></i> Registrar';
+            }
+            
+            document.body.removeChild(script2);
+            delete window[callback2];
+        };
+        
+        const params2 = new URLSearchParams({
+            action: 'registrarAsistencia',
+            datos: JSON.stringify(datos),
+            callback: callback2
+        });
+        
+        script2.src = `${API_URL}?${params2.toString()}`;
+        document.body.appendChild(script2);
+    }
+
+    
+    function enviarRegistro() {
+        const datos = {
+            fecha: new Date().toISOString(),
+            usuario: userData.username,
+            unidad: unidad,
+            turno: turno,
+            ubicacion: position ? {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude
+            } : null
+        };
+
+        const script2 = document.createElement('script');
+        const callback2 = 'jsonpCallback_' + Math.round(Math.random() * 1000000);
+        
+        window[callback2] = function(response) {
+            if (response.success) {
+                showStatus(`Asistencia registrada correctamente en ${unidad}`, true);
+                cerrarModal();
+            } else {
+                showStatus('Error al registrar asistencia: ' + response.message, false);
+                // Restaurar el botón solo en caso de error
+                btnRegistrar.disabled = false;
+                btnRegistrar.innerHTML = '<i class="fas fa-check"></i> Registrar';
             }
             
             document.body.removeChild(script2);
@@ -237,7 +306,6 @@ function registrarAsistencia(unidad, turno, position) {
         document.body.appendChild(script2);
     }
 }
-
 function initQRScanner() {
     if (html5QrcodeScanner) {
         stopScanner(); // Asegurarnos de detener cualquier instancia previa
