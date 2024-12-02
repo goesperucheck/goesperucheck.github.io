@@ -3,6 +3,10 @@ let turnos = [];
 const API_URL = 'https://script.google.com/macros/s/AKfycbxT9Cq9EmOpsPB3jalrVEhnVwAUxl8NS0A27rwO-2V7/dev';
 
 document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('welcomeModal').style.display = 'flex';
+    document.getElementById('btnEntendido').addEventListener('click', function() {
+        document.getElementById('welcomeModal').style.display = 'none';
+    });
     const scanButton = document.getElementById('scanButton');
     const closeScanner = document.getElementById('closeScanner');
     const qrScanner = document.getElementById('qrScanner');
