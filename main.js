@@ -4,7 +4,7 @@ const ROLE_ACCESS = {
     'SUPERVISOR': ['registro.html', 'ronda.html', 'ronda_interna.html', 'reporteResguardo.html'],
     'OPERADOR': ['registro.html', 'control_unidades.html', 'control_rondas.html', 'control_rondas_internas.html', 'admin_unidades.html', 'admin_puntos_ronda.html', 'reporteResguardo.html', 'transporte.html', 'controlcustodias.html'],
     'COORDINADOR': ['registro.html', 'control_unidades.html', 'control_rondas.html', 'control_rondas_internas.html', 'reporteResguardo.html', 'ronda_coordinador.html', 'admin_puntos_ronda.html'],
-    'ADMINISTRADOR': ['registro.html', 'ronda.html', 'ronda_interna.html', 'control_unidades.html', 'admin_unidades.html', 'control_rondas.html', 'control_rondas_internas.html', 'admin_puntos_ronda.html', 'reporteResguardo.html', 'transporte.html', 'controlcustodias.html', 'ronda_coordinador.html']
+    'ADMINISTRADOR': ['registro.html', 'ronda.html', 'ronda_interna.html', 'control_unidades.html', 'admin_unidades.html', 'control_rondas.html', 'control_rondas_internas.html', 'admin_puntos_ronda.html', 'reporteResguardo.html', 'transporte.html', 'controlcustodias.html', 'ronda_coordinador.html','control_ronda_coordinador.html']
 };
 
 // Mapeo de URLs a información del menú
@@ -59,10 +59,15 @@ const MENU_ITEMS = {
         title: 'Asignación de Servicios',
         description: 'Crea servicios // Asigna resguardos'
     },
+    'control_ronda_coordinador.html': {
+        icon: 'fas fa-shield',
+        title: 'Control de Rondas - Coordinadores',
+        description: 'Controla las rondas de los coordinadores'
+    },
     'controlcustodias.html': {
         icon: 'fas fa-shield',
         title: 'Control de Custodias',
-        description: 'Controla el servicio de ccustodia'
+        description: 'Controla el servicio de custodia'
     },
     'admin_puntos_ronda.html': {
         icon: 'fas fa-map-marker-alt',
