@@ -3,8 +3,8 @@ const ROLE_ACCESS = {
     'PERSONAL DE SEGURIDAD': ['registro.html', 'ronda_interna.html'],
     'SUPERVISOR': ['registro.html', 'ronda.html', 'ronda_interna.html', 'reporteResguardo.html'],
     'OPERADOR': ['registro.html', 'control_unidades.html', 'control_rondas.html', 'control_rondas_internas.html', 'admin_unidades.html', 'admin_puntos_ronda.html', 'reporteResguardo.html', 'transporte.html', 'controlcustodias.html'],
-    'COORDINADOR': ['registro.html', 'control_unidades.html', 'control_rondas.html', 'control_rondas_internas.html', 'reporteResguardo.html'],
-    'ADMINISTRADOR': ['registro.html', 'ronda.html', 'ronda_interna.html', 'control_unidades.html', 'admin_unidades.html', 'control_rondas.html', 'control_rondas_internas.html', 'admin_puntos_ronda.html', 'reporteResguardo.html', 'transporte.html', 'controlcustodias.html']
+    'COORDINADOR': ['registro.html', 'control_unidades.html', 'control_rondas.html', 'control_rondas_internas.html', 'reporteResguardo.html', 'ronda_coordinador.html', 'admin_puntos_ronda.html'],
+    'ADMINISTRADOR': ['registro.html', 'ronda.html', 'ronda_interna.html', 'control_unidades.html', 'admin_unidades.html', 'control_rondas.html', 'control_rondas_internas.html', 'admin_puntos_ronda.html', 'reporteResguardo.html', 'transporte.html', 'controlcustodias.html', 'ronda_coordinador.html']
 };
 
 // Mapeo de URLs a información del menú
@@ -23,6 +23,11 @@ const MENU_ITEMS = {
         icon: 'fas fa-walking',
         title: 'Ronda Interna',
         description: 'Registra la ronda interna de la unidad'
+    },
+    'ronda_coordinador.html': {
+        icon: 'fas fa-clipboard-list',
+        title: 'Ronda de Coordinador',
+        description: 'Ronda integral de supervisión - Coordinadores'
     },
     'control_unidades.html': {
         icon: 'fas fa-building',
@@ -67,6 +72,8 @@ const MENU_ITEMS = {
 };
 
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM Cargado'); // Debug
+
     // Verificar usuario logueado
     const userData = localStorage.getItem('user');
     if (!userData) {
@@ -89,6 +96,68 @@ document.addEventListener('DOMContentLoaded', function() {
         window.location.href = 'index.html';
         return;
     }
+
+// Configurar el botón de pánico
+const panicButton = document.getElementById('panicButton');
+if (panicButton) {
+    console.log('Configurando botón de pánico');
+    
+    panicButton.addEventListener('click', function() {
+        console.log('Botón de pánico clickeado');
+        
+        const userData = JSON.parse(localStorage.getItem('user'));
+        if (!userData) {
+            console.log('No hay datos de usuario');
+            return;
+        }
+        
+        // Obtener el iframe
+        const frame = document.getElementById('contentFrame');
+        
+        if (frame) {
+            console.log('Frame encontrado, esperando carga completa');
+            
+            // Asegurarse de que el iframe esté cargado
+            if (frame.contentWindow) {
+                try {
+                    // Esperar a que el iframe esté completamente cargado
+                    if (frame.contentDocument.readyState === 'complete') {
+                        frame.contentWindow.postMessage({
+                            type: 'panicAlert',
+                            data: {
+                                username: userData.usuario,
+                                timestamp: new Date().toISOString()
+                            }
+                        }, '*');
+                        console.log('Mensaje enviado al iframe');
+                    } else {
+                        console.log('Frame no está completamente cargado, esperando...');
+                        frame.onload = function() {
+                            frame.contentWindow.postMessage({
+                                type: 'panicAlert',
+                                data: {
+                                    username: userData.usuario,
+                                    timestamp: new Date().toISOString()
+                                }
+                            }, '*');
+                            console.log('Mensaje enviado al iframe después de carga');
+                        };
+                    }
+                } catch (error) {
+                    console.error('Error al enviar mensaje:', error);
+                }
+            } else {
+                console.error('contentWindow no disponible en el frame');
+            }
+        } else {
+            console.error('Frame no encontrado');
+        }
+    });
+    
+    console.log('Evento click agregado exitosamente');
+} else {
+    console.error('ERROR: Botón de pánico no encontrado en el DOM');
+}
 
     // Manejar el toggle del sidebar
     const sidebar = document.getElementById('sidebar');
@@ -118,6 +187,7 @@ document.addEventListener('DOMContentLoaded', function() {
     showMenu();
 });
 
+// El resto de las funciones se mantienen igual
 function cargarInfoUsuario(user) {
     const userNameElement = document.getElementById('userName');
     const userRoleElement = document.getElementById('userRole');
