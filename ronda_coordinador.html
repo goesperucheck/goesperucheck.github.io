@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evaluación de Ronda</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+
+        .form-container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        h2 {
+            color: #333;
+            margin-bottom: 25px;
+            font-size: 24px;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #444;
+        }
+
+        .form-group select,
+        .form-group input[type="text"],
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .form-group select {
+            background-color: white;
+        }
+
+        .form-group input[readonly] {
+            background-color: #f8f9fa;
+            cursor: not-allowed;
+        }
+
+        .rating {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .rating input[type="radio"] {
+            display: none;
+        }
+
+        .rating label {
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            background: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .rating input[type="radio"]:checked + label {
+            background: #FF8C00;
+            color: white;
+        }
+
+        .image-preview {
+            width: 200px;
+            height: 200px;
+            border: 2px dashed #ddd;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+
+        .image-preview.has-image {
+            border: none;
+            color: white;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+        }
+
+        .btn-photo {
+            background: #FF8C00;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .btn-photo:hover {
+            background: #e67e00;
+        }
+
+        .btn-submit {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+
+        .btn-submit:hover {
+            background: #218838;
+        }
+
+        .conditional-input {
+            display: none;
+            margin-top: 10px;
+        }
+
+        .verification-item {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+
+        .add-verification {
+            color: #007bff;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .add-verification:hover {
+            color: #0056b3;
+        }
+
+        #status {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 4px;
+            display: none;
+        }
+
+        #status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        #status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h2>Evaluación de Ronda</h2>
+        <form id="evaluacionForm">
+            <!-- Campos base -->
+            <div class="form-group">
+                <label for="unidad">Unidad:</label>
+                <select id="unidad" name="unidad" required></select>
+            </div>
+
+            <div class="form-group">
+                <label for="usuario">Usuario:</label>
+                <input type="text" id="usuario" name="usuario" readonly>
+            </div>
+
+            <div class="form-group">
+                <label for="fecha">Fecha:</label>
+                <input type="text" id="fecha" name="fecha" readonly>
+            </div>
+
+            <!-- 1. Presencia del personal -->
+            <div class="form-group">
+                <label>1. Presencia del personal (apariencia y aseo):</label>
+                <div class="rating">
+                    <input type="radio" name="presencia" value="1" id="p1"><label for="p1">1</label>
+                    <input type="radio" name="presencia" value="2" id="p2"><label for="p2">2</label>
+                    <input type="radio" name="presencia" value="3" id="p3"><label for="p3">3</label>
+                    <input type="radio" name="presencia" value="4" id="p4"><label for="p4">4</label>
+                    <input type="radio" name="presencia" value="5" id="p5"><label for="p5">5</label>
+                </div>
+                <textarea id="presenciaComentario" placeholder="Comentarios..."></textarea>
+                <button type="button" class="btn-photo" onclick="document.getElementById('presenciaFoto').click()">
+                    <i class="fas fa-camera"></i> Tomar Foto
+                </button>
+                <input type="file" id="presenciaFoto" accept="image/*" style="display: none">
+                <div id="presenciaPreview" class="image-preview"></div>
+            </div>
+
+            <!-- 2. Verificación del uniforme -->
+            <div class="form-group">
+                <label>2. Verificación del uniforme de trabajo:</label>
+                <select id="uniforme" name="uniforme">
+                    <option value="conforme">Conforme</option>
+                    <option value="cambio">Se requiere cambio total o parcial</option>
+                </select>
+                <div class="conditional-input" id="uniformeExtras">
+                    <textarea id="uniformeComentario" placeholder="Comentarios..."></textarea>
+                    <button type="button" class="btn-photo" onclick="document.getElementById('uniformeFoto').click()">
+                        <i class="fas fa-camera"></i> Tomar Foto
+                    </button>
+                    <input type="file" id="uniformeFoto" accept="image/*" style="display: none">
+                    <div id="uniformePreview" class="image-preview"></div>
+                </div>
+            </div>
+            <!-- 3. Limpieza y orden del puesto -->
+            <div class="form-group">
+                <label>3. Limpieza y orden del puesto:</label>
+                <select id="limpieza" name="limpieza">
+                    <option value="conforme">Conforme</option>
+                    <option value="noConforme">No conforme</option>
+                </select>
+                <div class="conditional-input" id="limpiezaExtras">
+                    <textarea id="limpiezaComentario" placeholder="Comentarios..."></textarea>
+                    <button type="button" class="btn-photo" onclick="document.getElementById('limpiezaFoto').click()">
+                        <i class="fas fa-camera"></i> Tomar Foto
+                    </button>
+                    <input type="file" id="limpiezaFoto" accept="image/*" style="display: none">
+                    <div id="limpiezaPreview" class="image-preview"></div>
+                </div>
+            </div>
+
+            <!-- 4. Verificación de cuaderno de ocurrencia -->
+            <div class="form-group">
+                <label>4. Verificación de cuaderno de ocurrencia:</label>
+                <select id="cuaderno" name="cuaderno">
+                    <option value="conforme">Conforme</option>
+                    <option value="noConforme">No conforme</option>
+                </select>
+                <div class="conditional-input" id="cuadernoExtras">
+                    <textarea id="cuadernoComentario" placeholder="Comentarios..."></textarea>
+                    <button type="button" class="btn-photo" onclick="document.getElementById('cuadernoFoto').click()">
+                        <i class="fas fa-camera"></i> Tomar Foto
+                    </button>
+                    <input type="file" id="cuadernoFoto" accept="image/*" style="display: none">
+                    <div id="cuadernoPreview" class="image-preview"></div>
+                </div>
+            </div>
+
+            <!-- 5. Evaluación de funciones y procedimientos -->
+            <div class="form-group">
+                <label>5. Evaluación de funciones y procedimientos:</label>
+                <select id="funciones" name="funciones">
+                    <option value="conforme">Conforme</option>
+                    <option value="observado">Observado</option>
+                </select>
+                <div class="conditional-input" id="funcionesExtras">
+                    <textarea id="funcionesComentario" placeholder="Comentarios..."></textarea>
+                    <button type="button" class="btn-photo" onclick="document.getElementById('funcionesFoto').click()">
+                        <i class="fas fa-camera"></i> Tomar Foto
+                    </button>
+                    <input type="file" id="funcionesFoto" accept="image/*" style="display: none">
+                    <div id="funcionesPreview" class="image-preview"></div>
+                </div>
+            </div>
+
+            <!-- 6. Entrevista con el agente -->
+            <div class="form-group">
+                <label>6. Entrevista con el agente:</label>
+                <textarea id="entrevistaAgente" placeholder="Comentarios..."></textarea>
+            </div>
+
+            <!-- 7. Entrevista con el cliente -->
+            <div class="form-group">
+                <label>7. Entrevista con el cliente:</label>
+                <textarea id="entrevistaCliente" placeholder="Comentarios..."></textarea>
+                <button type="button" class="btn-photo" onclick="document.getElementById('entrevistaClienteFoto').click()">
+                    <i class="fas fa-camera"></i> Tomar Foto
+                </button>
+                <input type="file" id="entrevistaClienteFoto" accept="image/*" style="display: none">
+                <div id="entrevistaClientePreview" class="image-preview"></div>
+            </div>
+
+            <!-- 8. Verificación de la unidad -->
+            <div class="form-group" id="verificacionUnidadContainer">
+                <label>8. Verificación de la unidad:</label>
+                <div class="verification-item">
+                    <textarea name="verificacionUnidad[]" placeholder="Comentarios..."></textarea>
+                    <button type="button" class="btn-photo" onclick="document.getElementById('verificacionUnidadFoto0').click()">
+                        <i class="fas fa-camera"></i> Tomar Foto
+                    </button>
+                    <input type="file" id="verificacionUnidadFoto0" name="verificacionUnidadFoto[]" accept="image/*" style="display: none">
+                    <div id="verificacionUnidadPreview0" class="image-preview"></div>
+                </div>
+                <span class="add-verification" onclick="addVerificationField()">
+                    <i class="fas fa-plus-circle"></i> Agregar más
+                </span>
+            </div>
+
+            <button type="submit" class="btn-submit">Enviar</button>
+        </form>
+        <div id="status"></div>
+    </div>
+
+    <script>
+        const CLOUDINARY_CLOUD_NAME = 'do7yzmfz4';
+        const CLOUDINARY_UPLOAD_PRESET = 'goes_preset';
+        const API_URL = 'https://script.google.com/macros/s/AKfycbxT9Cq9EmOpsPB3jalrVEhnVwAUxl8NS0A27rwO-2V7/dev';
+        const uploadedImages = {};
+
+        document.addEventListener('DOMContentLoaded', async function() {
+    try {
+        // Cargar unidades desde la hoja de cálculo
+        await cargarUnidades();
+        
+        // Establecer usuario y fecha
+        const userData = JSON.parse(localStorage.getItem('user'));
+        document.getElementById('usuario').value = userData.username;
+        document.getElementById('fecha').value = new Date().toLocaleDateString();
+
+        // Manejar cambios en los campos condicionales
+        setupConditionalInputs();
+        
+        // Configurar las vistas previas de imágenes
+        setupImagePreviews();
+
+        // Manejar el envío del formulario
+        document.getElementById('evaluacionForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            await handleSubmit();
+        });
+    } catch (error) {
+        console.error('Error en la inicialización:', error);
+    }
+});
+
+function cargarUnidades() {
+    return new Promise((resolve, reject) => {
+        const callbackName = 'callback_' + Math.random().toString(36).substr(2, 9);
+        window[callbackName] = function(response) {
+            if (response.success) {
+                const unidadSelect = document.getElementById('unidad');
+                // Limpiar opciones existentes
+                unidadSelect.innerHTML = '<option value="">Seleccione una unidad</option>';
+                
+                // Agregar nuevas opciones
+                response.data.forEach(unidad => {
+                    const option = document.createElement('option');
+                    option.value = unidad;
+                    option.textContent = unidad;
+                    unidadSelect.appendChild(option);
+                });
+                
+                resolve(response.data);
+            } else {
+                console.error('Error al cargar unidades:', response.message);
+                reject(new Error(response.message));
+            }
+            // Limpieza
+            delete window[callbackName];
+            document.body.removeChild(script);
+        };
+
+        const script = document.createElement('script');
+        script.src = `${API_URL}?action=obtenerUnidadesParaPuntos&callback=${callbackName}`;
+        script.onerror = () => {
+            delete window[callbackName];
+            document.body.removeChild(script);
+            reject(new Error('Error al cargar el script'));
+        };
+        document.body.appendChild(script);
+    });
+}
+
+function setupConditionalInputs() {
+    document.querySelectorAll('select').forEach(select => {
+        select.addEventListener('change', function() {
+            const extras = this.parentElement.querySelector('.conditional-input');
+            if (this.value === 'cambio' || this.value === 'noConforme' || this.value === 'observado') {
+                extras.style.display = 'block';
+            } else {
+                extras.style.display = 'none';
+            }
+        });
+    });
+}
+
+async function uploadToCloudinary(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+
+    try {
+        const response = await fetch(
+            `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+            {
+                method: 'POST',
+                body: formData
+            }
+        );
+
+        if (!response.ok) throw new Error('Error al subir imagen');
+        const data = await response.json();
+        return data.secure_url;
+    } catch (error) {
+        console.error('Error en uploadToCloudinary:', error);
+        throw error;
+    }
+}
+
+async function handleSubmit() {
+    try {
+        const formData = new FormData(document.getElementById('evaluacionForm'));
+        const data = {
+            unidad: formData.get('unidad') || '',
+            usuario: document.getElementById('usuario').value || '',
+            fecha: document.getElementById('fecha').value || '',
+            presencia: {
+                valor: formData.get('presencia') || '',
+                comentario: document.getElementById('presenciaComentario').value || '',
+                foto: uploadedImages['presenciaFoto'] || ''
+            },
+            uniforme: {
+                valor: document.getElementById('uniforme').value || '',
+                comentario: document.getElementById('uniformeComentario').value || '',
+                foto: uploadedImages['uniformeFoto'] || ''
+            },
+            limpieza: {
+                valor: document.getElementById('limpieza').value || '',
+                comentario: document.getElementById('limpiezaComentario').value || '',
+                foto: uploadedImages['limpiezaFoto'] || ''
+            },
+            cuaderno: {
+                valor: document.getElementById('cuaderno').value || '',
+                comentario: document.getElementById('cuadernoComentario').value || '',
+                foto: uploadedImages['cuadernoFoto'] || ''
+            },
+            funciones: {
+                valor: document.getElementById('funciones').value || '',
+                comentario: document.getElementById('funcionesComentario').value || '',
+                foto: uploadedImages['funcionesFoto'] || ''
+            },
+            entrevistaAgente: document.getElementById('entrevistaAgente').value || '',
+            entrevistaCliente: {
+                comentario: document.getElementById('entrevistaCliente').value || '',
+                foto: uploadedImages['entrevistaClienteFoto'] || ''
+            },
+            verificacionUnidad: []
+        };
+
+        // Recoger datos de verificación de unidad
+        document.querySelectorAll('#verificacionUnidadContainer .verification-item').forEach((item, index) => {
+            const comentario = item.querySelector('textarea').value || '';
+            data.verificacionUnidad.push({
+                comentario: comentario,
+                foto: uploadedImages[`verificacionUnidadFoto${index}`] || ''
+            });
+        });
+
+        return new Promise((resolve, reject) => {
+            const callbackName = 'callback_' + Math.random().toString(36).substr(2, 9);
+            
+            // Definir el callback antes de crear el script
+            window[callbackName] = function(response) {
+                try {
+                    if (response && typeof response === 'object') {
+                        if (response.success) {
+                            showStatus(response.message || 'Evaluación registrada correctamente', true);
+                            resolve(response);
+                        } else {
+                            showStatus(response.message || 'Error al enviar el formulario', false);
+                            reject(new Error(response.message));
+                        }
+                    } else {
+                        showStatus('Respuesta inválida del servidor', false);
+                        reject(new Error('Respuesta inválida'));
+                    }
+                } catch (error) {
+                    console.error('Error en callback:', error);
+                    reject(error);
+                } finally {
+                    // Limpieza
+                    if (script && script.parentNode) {
+                        script.parentNode.removeChild(script);
+                    }
+                    delete window[callbackName];
+                }
+            };
+
+            // Crear el script después de definir el callback
+            const script = document.createElement('script');
+            const params = new URLSearchParams({
+                action: 'registrarEvaluacionRonda',
+                callback: callbackName,
+                datos: JSON.stringify(data)
+            });
+
+            script.src = `${API_URL}?${params.toString()}`;
+            script.onerror = () => {
+                if (script.parentNode) {
+                    script.parentNode.removeChild(script);
+                }
+                delete window[callbackName];
+                showStatus('Error al cargar el script', false);
+                reject(new Error('Error al cargar el script'));
+            };
+
+            document.body.appendChild(script);
+        });
+    } catch (error) {
+        console.error('Error al procesar el formulario:', error);
+        showStatus('Error al procesar el formulario: ' + error.message, false);
+        throw error;
+    }
+}
+
+function showStatus(message, isSuccess) {
+    const statusDiv = document.getElementById('status');
+    statusDiv.textContent = message;
+    statusDiv.className = isSuccess ? 'success' : 'error';
+    statusDiv.style.display = 'block';
+    setTimeout(() => {
+        statusDiv.style.display = 'none';
+    }, 5000);
+}
+
+function addVerificationField() {
+    const container = document.getElementById('verificacionUnidadContainer');
+    const index = container.querySelectorAll('.verification-item').length;
+    const item = document.createElement('div');
+    item.className = 'verification-item';
+    item.innerHTML = `
+        <textarea name="verificacionUnidad[]" placeholder="Comentarios..."></textarea>
+        <button type="button" class="btn-photo" onclick="document.getElementById('verificacionUnidadFoto${index}').click()">
+            <i class="fas fa-camera"></i> Tomar Foto
+        </button>
+        <input type="file" id="verificacionUnidadFoto${index}" name="verificacionUnidadFoto[]" accept="image/*" style="display: none">
+        <div id="verificacionUnidadPreview${index}" class="image-preview"></div>
+    `;
+    container.insertBefore(item, container.querySelector('.add-verification'));
+
+    // Agregar el manejador de eventos para la nueva imagen
+    const newInput = document.getElementById(`verificacionUnidadFoto${index}`);
+    newInput.addEventListener('change', async function(e) {
+        const preview = document.getElementById(`verificacionUnidadPreview${index}`);
+        const file = e.target.files[0];
+        
+        if (file) {
+            try {
+                // Mostrar vista previa
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.style.backgroundImage = `url(${e.target.result})`;
+                    preview.classList.add('has-image');
+                    preview.innerHTML = '';
+                };
+                reader.readAsDataURL(file);
+                
+                // Subir a Cloudinary
+                const imageUrl = await uploadToCloudinary(file);
+                uploadedImages[`verificacionUnidadFoto${index}`] = imageUrl;
+            } catch (error) {
+                console.error('Error al procesar la imagen:', error);
+                preview.style.backgroundImage = '';
+                preview.classList.remove('has-image');
+                preview.innerHTML = 'Error al cargar la imagen';
+            }
+        }
+    });
+}
+
+function setupImagePreviews() {
+    const imageInputsMap = {
+        'presenciaFoto': 'presenciaPreview',
+        'uniformeFoto': 'uniformePreview',
+        'limpiezaFoto': 'limpiezaPreview',
+        'cuadernoFoto': 'cuadernoPreview',
+        'funcionesFoto': 'funcionesPreview',
+        'entrevistaClienteFoto': 'entrevistaClientePreview'
+    };
+    
+    Object.entries(imageInputsMap).forEach(([inputId, previewId]) => {
+        const input = document.getElementById(inputId);
+        if (input) {
+            input.addEventListener('change', async function(e) {
+                const preview = document.getElementById(previewId);
+                const file = e.target.files[0];
+                
+                if (file) {
+                    try {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            preview.style.backgroundImage = `url(${e.target.result})`;
+                            preview.classList.add('has-image');
+                            preview.innerHTML = '';
+                        };
+                        reader.readAsDataURL(file);
+                        
+                        const imageUrl = await uploadToCloudinary(file);
+                        uploadedImages[inputId] = imageUrl;
+                    } catch (error) {
+                        console.error('Error al procesar la imagen:', error);
+                        preview.style.backgroundImage = '';
+                        preview.classList.remove('has-image');
+                        preview.innerHTML = 'Error al cargar la imagen';
+                    }
+                }
+            });
+        }
+    });
+
+    // Configurar vistas previas para verificación de unidad
+    document.querySelectorAll('#verificacionUnidadContainer .verification-item').forEach((item, index) => {
+        const input = item.querySelector('input[type="file"]');
+        const preview = item.querySelector('.image-preview');
+        
+        input.addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            
+            if (file) {
+                try {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        preview.style.backgroundImage = `url(${e.target.result})`;
+                        preview.classList.add('has-image');
+                        preview.innerHTML = '';
+                    };
+                    reader.readAsDataURL(file);
+                    
+                    const imageUrl = await uploadToCloudinary(file);
+                    uploadedImages[`verificacionUnidadFoto${index}`] = imageUrl;
+                } catch (error) {
+                    console.error('Error al procesar la imagen:', error);
+                    preview.style.backgroundImage = '';
+                    preview.classList.remove('has-image');
+                    preview.innerHTML = 'Error al cargar la imagen';
+                }
+            }
+        });
+    });
+}
+
+
+    </script>
+</body>
+</html>
