@@ -300,6 +300,30 @@
                 font-size: 0.8em;
             }
         }
+
+        .panic-button {
+        background-color: #dc3545;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        cursor: pointer;
+        font-weight: bold;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-right: 15px;
+        border-radius: 4px;
+        transition: background-color 0.3s ease;
+        font-size: 14px;
+    }
+
+    .panic-button:hover {
+        background-color: #c82333;
+    }
+
+    .panic-button i {
+        font-size: 16px;
+    }
     </style>
 </head>
 <body>
@@ -420,7 +444,7 @@
                 <span id="userRole" class="user-role">Cargando...</span>
             </div>
         </div>
-        
+       
         <button class="nav-button active" onclick="showMenu()">
             <i class="fas fa-bars"></i>
             <span>Menú</span>
