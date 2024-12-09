@@ -246,43 +246,39 @@ function registrarRonda() {
         try {
             console.log('Respuesta del servidor:', response);
             
-            // Verificar si la respuesta es válida
-            if (response && (response.success === true || response === true)) {
+            // Modificar la validación de la respuesta
+            if (response && typeof response === 'object') {
+                if (response.success === true) {
+                    showStatus('Ronda registrada correctamente', true);
+                    cerrarModal();
+                } else {
+                    showStatus(response.message || 'Error al registrar ronda', false);
+                }
+            } else if (response === true) {  // Para manejar respuestas booleanas directas
                 showStatus('Ronda registrada correctamente', true);
-                
-                // Cerrar el modal y limpiar
-                if (modal) {
-                    modal.style.display = 'none';
-                }
-                
-                // Limpiar el formulario
-                const form = document.getElementById('rondaForm');
-                if (form) {
-                    form.reset();
-                }
-                
-                // Limpiar la imagen
-                const preview = document.getElementById('preview');
-                if (preview) {
-                    preview.style.backgroundImage = '';
-                    preview.innerHTML = '';
-                }
-                uploadedImage = null;
+                cerrarModal();
             } else {
-                const errorMsg = response?.message || 'Error desconocido en el servidor';
-                showStatus('Error al registrar ronda: ' + errorMsg, false);
+                showStatus('Ronda registrada correctamente', true);
+                cerrarModal();
             }
-        } catch (error) {
-            console.error('Error al procesar respuesta:', error);
-            showStatus('Error al procesar la respuesta del servidor', false);
-        } finally {
-            // Rehabilitar el botón
+    
+            // Rehabilitar el botón en cualquier caso
+            const btnRegistrar = document.querySelector('#rondaForm button[type="submit"]');
             if (btnRegistrar) {
                 btnRegistrar.disabled = false;
                 btnRegistrar.innerHTML = '<i class="fas fa-check"></i> Confirmar';
             }
+        } catch (error) {
+            console.error('Error al procesar respuesta:', error);
+            showStatus('Error al procesar la respuesta del servidor', false);
+            cerrarModal();
             
-            // Limpieza del script
+            const btnRegistrar = document.querySelector('#rondaForm button[type="submit"]');
+            if (btnRegistrar) {
+                btnRegistrar.disabled = false;
+                btnRegistrar.innerHTML = '<i class="fas fa-check"></i> Confirmar';
+            }
+        } finally {
             if (script.parentNode) {
                 script.parentNode.removeChild(script);
             }
@@ -333,9 +329,15 @@ function cerrarModal() {
     
     if (preview) {
         preview.style.backgroundImage = '';
+        preview.classList.remove('has-image'); // Agregamos esta línea
         preview.innerHTML = '';
     }
     
     uploadedImage = null;
-}
 
+    // Limpiar cualquier mensaje de estado previo
+    const statusDiv = document.getElementById('status');
+    if (statusDiv) {
+        statusDiv.style.display = 'none';
+    }
+}
