@@ -2,9 +2,9 @@
 const ROLE_ACCESS = {
     'PERSONAL DE SEGURIDAD': ['registro.html', 'ronda_interna.html'],
     'SUPERVISOR': ['registro.html', 'ronda.html', 'ronda_interna.html', 'reporteResguardo.html'],
-    'OPERADOR': ['registro.html', 'control_unidades.html', 'control_rondas.html', 'control_rondas_internas.html', 'admin_unidades.html', 'admin_puntos_ronda.html', 'reporteResguardo.html', 'transporte.html', 'controlcustodias.html'],
-    'COORDINADOR': ['registro.html', 'control_unidades.html', 'control_rondas.html', 'control_rondas_internas.html', 'reporteResguardo.html', 'ronda_coordinador.html', 'admin_puntos_ronda.html'],
-    'ADMINISTRADOR': ['registro.html', 'ronda.html', 'ronda_interna.html', 'control_unidades.html', 'admin_unidades.html', 'control_rondas.html', 'control_rondas_internas.html', 'admin_puntos_ronda.html', 'reporteResguardo.html', 'transporte.html', 'controlcustodias.html', 'ronda_coordinador.html','control_ronda_coordinador.html']
+    'OPERADOR': ['registro.html', 'control_unidades.html', 'control_rondas.html', 'control_rondas_internas.html', 'admin_unidades.html', 'admin_puntos_ronda.html', 'reporteResguardo.html', 'transporte.html', 'controlcustodias.html', 'control_asistencias.html'],
+    'COORDINADOR': ['registro.html', 'control_unidades.html', 'control_rondas.html', 'control_rondas_internas.html', 'reporteResguardo.html', 'ronda_coordinador.html', 'admin_puntos_ronda.html', 'control_asistencias.html'],
+    'ADMINISTRADOR': ['registro.html', 'ronda.html', 'ronda_interna.html', 'control_unidades.html', 'admin_unidades.html', 'control_rondas.html', 'control_rondas_internas.html', 'admin_puntos_ronda.html', 'reporteResguardo.html', 'transporte.html', 'controlcustodias.html', 'ronda_coordinador.html','control_ronda_coordinador.html', 'control_asistencias.html']
 };
 
 // Mapeo de URLs a información del menú
@@ -73,6 +73,11 @@ const MENU_ITEMS = {
         icon: 'fas fa-map-marker-alt',
         title: 'Puntos de Ronda',
         description: 'Administración de puntos de control para rondas'
+    },
+    'control_asistencias.html': {
+        icon: 'fas fa-user-clock',
+        title: 'Control de Asistencias',
+        description: 'Monitoreo y análisis de asistencias del personal'
     }
 };
 
