@@ -411,6 +411,90 @@ canvas {
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
 
+.panic-modal {
+    z-index: 9999 !important; /* Asegurar que esté por encima de todo */
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.7);
+}
+
+.panic-modal .modal-content {
+    position: relative;
+    background-color: #fefefe;
+    margin: 15% auto;
+    padding: 0;
+    width: 90%;
+    max-width: 400px;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+}
+
+.panic-modal .modal-header {
+    background-color: #dc3545;
+    color: white;
+    padding: 15px 20px;
+}
+
+.panic-modal .modal-header h2 {
+    color: white;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.5em;
+}
+
+.panic-modal .modal-body {
+    padding: 20px;
+}
+
+.panic-modal .btn-confirm {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    width: 100%;
+    font-size: 1.1em;
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: background-color 0.3s ease;
+}
+
+.panic-modal .btn-confirm:hover {
+    background-color: #c82333;
+}
+
+/* Cuando el modal de pánico está activo, deshabilitar interacción con otros elementos */
+.panic-active .container,
+.panic-active .modal:not(.panic-modal) {
+    pointer-events: none;
+    filter: blur(2px);
+}
+#searchInput {
+    width: 100%;
+    padding: 10px 15px;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    font-size: 15px;
+    transition: all 0.3s ease;
+    background: white;
+}
+
+#searchInput:focus {
+    border-color: #3498db;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(52,152,219,0.1);
+}
+
     </style>
 </head>
 <body>
@@ -491,8 +575,11 @@ canvas {
             </div>
         </div>
 
+        <div id="loading" class="loading">
+            <i class="fas fa-spinner fa-spin"></i> Cargando...
+        </div>
 
-        
+
         <div class="control-filters">
             <div class="form-group">
                 <label>Fecha:</label>
@@ -505,16 +592,19 @@ canvas {
                 </select>
             </div>
             <div class="form-group">
+                <label>Buscar:</label>
+                <input type="text" id="searchInput" placeholder="Buscar en cualquier columna...">
+            </div>
+            <div class="form-group">
                 <button onclick="consultarControl()">
                     <i class="fas fa-search"></i> Consultar
                 </button>
             </div>
         </div>
 
-        <div id="loading" class="loading">
-            <i class="fas fa-spinner fa-spin"></i> Cargando...
-        </div>
 
+
+        
         <div id="error-message" class="error-message"></div>
         
         <div id="resultados" class="resultados-grid"></div>
@@ -549,6 +639,8 @@ canvas {
         // Definir la URL del API (ACTUALIZA ESTA URL CON TU DEPLOY)
         const API_URL = 'https://script.google.com/macros/s/AKfycbxT9Cq9EmOpsPB3jalrVEhnVwAUxl8NS0A27rwO-2V7/dev';
         let asistenciasData = [];
+        let datosOriginales = []; // Variable para mantener los datos originales
+
         document.addEventListener('DOMContentLoaded', function() {
     // Establecer fecha actual
     const hoy = new Date().toISOString().split('T')[0];
@@ -559,8 +651,54 @@ canvas {
     
     // Consultar todas las unidades automáticamente
     consultarControl();
-});
 
+    // Agregar el event listener para el campo de búsqueda
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            // Obtener el término de búsqueda
+            const searchTerm = this.value.toLowerCase();
+            
+            // Obtener todas las filas de la tabla
+            const tabla = document.querySelector('.resultados-tabla');
+            if (!tabla) return;
+            
+            const filas = tabla.getElementsByTagName('tr');
+            let datosFiltrados = [];
+            
+            // Recorrer todas las filas y ocultar/mostrar según el filtro
+            for (let i = 1; i < filas.length; i++) { // Empezamos en 1 para saltar el encabezado
+                const fila = filas[i];
+                const textoFila = fila.textContent.toLowerCase();
+                
+                if (textoFila.includes(searchTerm)) {
+                    fila.style.display = '';
+                    // Obtener los datos de la fila visible para actualizar las gráficas
+                    if (datosOriginales[i-1]) {
+                        datosFiltrados.push(datosOriginales[i-1]);
+                    }
+                } else {
+                    fila.style.display = 'none';
+                }
+            }
+            
+            // Actualizar las gráficas con los datos filtrados
+            if (datosFiltrados.length > 0) {
+                // Destruir gráficos existentes antes de crear nuevos
+                ['chartDia', 'chartTarde', 'chartNoche'].forEach(id => {
+                    const chartInstance = Chart.getChart(id);
+                    if (chartInstance) {
+                        chartInstance.destroy();
+                    }
+                });
+                
+                // Actualizar dashboard con datos filtrados
+                actualizarDashboard(datosFiltrados);
+            }
+        });
+    }
+});
+            
         function cargarUnidades() {
             const script = document.createElement('script');
             const callback = 'callback_' + Math.random().toString(36).substr(2, 9);
@@ -606,12 +744,12 @@ canvas {
         console.log('Respuesta del servidor:', response);
         mostrarCargando(false);
         if (response.success) {
-            let datos = response.data;
+            // Guardar datos originales
+            datosOriginales = [...response.data];
             
-            // Filtrar los datos si hay una unidad seleccionada
+            let datos = response.data;
             if (unidad) {
                 datos = datos.filter(d => d.unidad === unidad);
-                console.log('Datos filtrados por unidad:', datos);
             }
             
             // Destruir gráficos existentes antes de crear nuevos
@@ -635,16 +773,62 @@ canvas {
     document.body.appendChild(script);
 }
 
+
+
+
+
+
+
+
 function mostrarResultados(reportes) {
     console.log('Mostrando resultados para:', reportes);
     
-    // Asegurarnos de que reportes sea un array
-    let reportesArray = Array.isArray(reportes) ? reportes : [reportes];
+    if (!Array.isArray(reportes)) {
+        console.error('Los reportes no son un array válido');
+        return;
+    }
+
+    // Actualizar dashboard
+    actualizarDashboard(reportes);
     
-    // Actualizar dashboard con los datos ya filtrados
-    actualizarDashboard(reportesArray);
+    // Mostrar tabla
+    const container = document.getElementById('resultados');
+    const tabla = `
+        <table class="resultados-tabla">
+            <thead>
+                <tr>
+                    <th>Unidad</th>
+                    <th>Turno Día</th>
+                    <th>Turno Tarde</th>
+                    <th>Turno Noche</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${reportes.map(reporte => `
+                    <tr>
+                        <td>${reporte.unidad}</td>
+                        ${crearCeldaProgreso(reporte.turnos.D)}
+                        ${crearCeldaProgreso(reporte.turnos.T)}
+                        ${crearCeldaProgreso(reporte.turnos.N)}
+                        <td>
+                            <button class="ver-detalle-btn" onclick="mostrarDetalle('${reporte.unidad}')">
+                                <i class="fas fa-eye"></i> Ver Detalle
+                            </button>
+                        </td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
     
-    // Crear tabla con los datos ya filtrados
+    container.innerHTML = tabla;
+}
+
+function mostrarResultadosFiltrados(reportes) {
+    // Actualizar dashboard con los datos filtrados
+    actualizarDashboard(reportes);
+    
     const container = document.getElementById('resultados');
     
     const tabla = `
@@ -659,7 +843,7 @@ function mostrarResultados(reportes) {
                 </tr>
             </thead>
             <tbody>
-                ${reportesArray.map(reporte => `
+                ${reportes.map(reporte => `
                     <tr>
                         <td>${reporte.unidad}</td>
                         ${crearCeldaProgreso(reporte.turnos.D)}
@@ -948,5 +1132,4 @@ document.querySelectorAll('.close').forEach(closeBtn => {
 
     </script>
 </body>
-</html>
 </html>
