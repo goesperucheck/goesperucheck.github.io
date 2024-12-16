@@ -494,7 +494,184 @@ canvas {
     outline: none;
     box-shadow: 0 0 0 3px rgba(52,152,219,0.1);
 }
+.registro-manual {
+    display: inline-flex;
+    align-items: center;
+    margin-left: 5px;
+    color: #FF8C00;
+    cursor: help;
+}
 
+.registro-manual i {
+    font-size: 0.9em;
+}
+
+.detalle-item span {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.btn-registro-manual {
+    background-color: #FF8C00;
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(255,140,0,0.2);
+}
+
+.btn-registro-manual:hover {
+    background-color: #FF7000;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(255,140,0,0.3);
+}
+
+#registroManualModal .modal-content {
+    background-color: #fefefe;
+    margin: 2% auto;
+    padding: 0;
+    border: 1px solid #888;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+}
+
+#registroManualModal .modal-header {
+    background-color: #FF8C00;
+    color: white;
+    padding: 15px 20px;
+    border-radius: 8px 8px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#registroManualModal .modal-header h2 {
+    color: white;
+    margin: 0;
+    font-size: 1.5em;
+}
+
+#registroManualModal .modal-body {
+    padding: 20px;
+}
+.stat-values {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-detail {
+    font-size: 12px;
+    color: #666;
+}
+
+.manual-count {
+    color: #FF8C00;  /* Color naranja para eventeros */
+}
+
+.btn-faltantes {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+}
+
+.btn-faltantes:hover {
+    background-color: #c82333;
+    transform: translateY(-1px);
+}
+
+.filter-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.turno-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-faltantes {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+}
+
+.btn-faltantes.active {
+    background-color: #dc3545;
+}
+
+.btn-faltantes:hover {
+    background-color: #dc3545;
+    transform: translateY(-1px);
+}
+
+.control-filters {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px; /* Reducir el espacio entre elementos */
+    margin-bottom: 30px;
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 12px;
+    border: 1px solid #e9ecef;
+}
+
+.form-group {
+    margin-bottom: 0;
+    min-width: 150px; /* Ancho mínimo para los campos de fecha y unidad */
+}
+
+/* Contenedor específico para los botones */
+.buttons-container {
+    display: flex;
+    gap: 5px; /* Espacio más pequeño entre botones */
+    align-items: flex-end;
+}
+
+/* Estilo común para todos los botones */
+.btn-faltantes, 
+button[onclick="consultarControl()"],
+.btn-registro-manual {
+    padding: 6px 12px;
+    font-size: 13px;
+    height: 35px;
+    white-space: nowrap; /* Evitar que el texto se rompa en múltiples líneas */
+}
+
+/* Ajustar inputs y selects */
+.form-group input,
+.form-group select {
+    padding: 6px 12px;
+    height: 35px;
+}
+
+.form-group label {
+    margin-bottom: 5px;
+    font-size: 14px;
+}
     </style>
 </head>
 <body>
@@ -504,6 +681,7 @@ canvas {
        
         <div class="dashboard">
             <div class="stats-container">
+                <!-- Turno Día -->
                 <div class="stats-group">
                     <h3>Turno Día</h3>
                     <div class="stat-cards">
@@ -511,7 +689,12 @@ canvas {
                             <i class="fas fa-user-check"></i>
                             <div class="stat-info">
                                 <span class="stat-label">Cubiertos</span>
-                                <span class="stat-value" id="dia-cubiertos">0</span>
+                                <div class="stat-values">
+                                    <span class="stat-value" id="dia-cubiertos">0</span>
+                                    <span class="stat-detail">
+                                        (<span id="dia-qr">0</span> QR + <span id="dia-manual" class="manual-count">0</span> E)
+                                    </span>
+                                </div>
                             </div>
                         </div>
                         <div class="stat-card">
@@ -527,6 +710,7 @@ canvas {
                     </div>
                 </div>
                 
+                <!-- Turno Tarde -->
                 <div class="stats-group">
                     <h3>Turno Tarde</h3>
                     <div class="stat-cards">
@@ -534,7 +718,12 @@ canvas {
                             <i class="fas fa-user-check"></i>
                             <div class="stat-info">
                                 <span class="stat-label">Cubiertos</span>
-                                <span class="stat-value" id="tarde-cubiertos">0</span>
+                                <div class="stat-values">
+                                    <span class="stat-value" id="tarde-cubiertos">0</span>
+                                    <span class="stat-detail">
+                                        (<span id="tarde-qr">0</span> QR + <span id="tarde-manual" class="manual-count">0</span> E)
+                                    </span>
+                                </div>
                             </div>
                         </div>
                         <div class="stat-card">
@@ -550,6 +739,7 @@ canvas {
                     </div>
                 </div>
                 
+                <!-- Turno Noche -->
                 <div class="stats-group">
                     <h3>Turno Noche</h3>
                     <div class="stat-cards">
@@ -557,7 +747,12 @@ canvas {
                             <i class="fas fa-user-check"></i>
                             <div class="stat-info">
                                 <span class="stat-label">Cubiertos</span>
-                                <span class="stat-value" id="noche-cubiertos">0</span>
+                                <div class="stat-values">
+                                    <span class="stat-value" id="noche-cubiertos">0</span>
+                                    <span class="stat-detail">
+                                        (<span id="noche-qr">0</span> QR + <span id="noche-manual" class="manual-count">0</span> E)
+                                    </span>
+                                </div>
                             </div>
                         </div>
                         <div class="stat-card">
@@ -595,9 +790,21 @@ canvas {
                 <label>Buscar:</label>
                 <input type="text" id="searchInput" placeholder="Buscar en cualquier columna...">
             </div>
-            <div class="form-group">
+            <div class="buttons-container">
                 <button onclick="consultarControl()">
                     <i class="fas fa-search"></i> Consultar
+                </button>
+                <button onclick="abrirRegistroManual()" class="btn-registro-manual">
+                    <i class="fas fa-edit"></i> Registro Manual
+                </button>
+                <button onclick="verFaltantes('D')" class="btn-faltantes" data-turno="D">
+                    <i class="fas fa-filter"></i> Día
+                </button>
+                <button onclick="verFaltantes('T')" class="btn-faltantes" data-turno="T">
+                    <i class="fas fa-filter"></i> Tarde
+                </button>
+                <button onclick="verFaltantes('N')" class="btn-faltantes" data-turno="N">
+                    <i class="fas fa-filter"></i> Noche
                 </button>
             </div>
         </div>
@@ -634,6 +841,21 @@ canvas {
     </div>
 </div>
 
+<!-- Modal para Registro Manual -->
+<div id="registroManualModal" class="modal">
+    <div class="modal-content" style="width: 90%; max-width: 800px;">
+        <div class="modal-header">
+            <h2><i class="fas fa-edit"></i> Registro Manual de Asistencia</h2>
+            <span class="close">&times;</span>
+        </div>
+        <div class="modal-body">
+            <iframe id="registroManualFrame" 
+                    src="registro_manual.html" 
+                    style="width: 100%; height: 600px; border: none;">
+            </iframe>
+        </div>
+    </div>
+</div>
 
     <script>
         // Definir la URL del API (ACTUALIZA ESTA URL CON TU DEPLOY)
@@ -667,13 +889,12 @@ canvas {
             let datosFiltrados = [];
             
             // Recorrer todas las filas y ocultar/mostrar según el filtro
-            for (let i = 1; i < filas.length; i++) { // Empezamos en 1 para saltar el encabezado
+            for (let i = 1; i < filas.length; i++) {
                 const fila = filas[i];
                 const textoFila = fila.textContent.toLowerCase();
                 
                 if (textoFila.includes(searchTerm)) {
                     fila.style.display = '';
-                    // Obtener los datos de la fila visible para actualizar las gráficas
                     if (datosOriginales[i-1]) {
                         datosFiltrados.push(datosOriginales[i-1]);
                     }
@@ -694,6 +915,13 @@ canvas {
                 
                 // Actualizar dashboard con datos filtrados
                 actualizarDashboard(datosFiltrados);
+            }
+
+            // Si hay un filtro de faltantes activo, reaplicarlo
+            const botonActivo = document.querySelector('.btn-faltantes.active');
+            if (botonActivo) {
+                const turno = botonActivo.getAttribute('data-turno');
+                verFaltantes(turno);
             }
         });
     }
@@ -825,73 +1053,38 @@ function mostrarResultados(reportes) {
     container.innerHTML = tabla;
 }
 
-function mostrarResultadosFiltrados(reportes) {
-    // Actualizar dashboard con los datos filtrados
-    actualizarDashboard(reportes);
-    
-    const container = document.getElementById('resultados');
-    
-    const tabla = `
-        <table class="resultados-tabla">
-            <thead>
-                <tr>
-                    <th>Unidad</th>
-                    <th>Turno Día</th>
-                    <th>Turno Tarde</th>
-                    <th>Turno Noche</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${reportes.map(reporte => `
-                    <tr>
-                        <td>${reporte.unidad}</td>
-                        ${crearCeldaProgreso(reporte.turnos.D)}
-                        ${crearCeldaProgreso(reporte.turnos.T)}
-                        ${crearCeldaProgreso(reporte.turnos.N)}
-                        <td>
-                            <button class="ver-detalle-btn" onclick="mostrarDetalle('${reporte.unidad}')">
-                                <i class="fas fa-eye"></i> Ver Detalle
-                            </button>
-                        </td>
-                    </tr>
-                `).join('')}
-            </tbody>
-        </table>
-    `;
-    
-    container.innerHTML = tabla;
-}
-
-
-
-
-
-
-
 function actualizarDashboard(reportes) {
     console.log('Actualizando dashboard con:', reportes);
     
     // Calcular totales por turno
     const totales = {
-        D: { presentes: 0, esperados: 0 },
-        T: { presentes: 0, esperados: 0 },
-        N: { presentes: 0, esperados: 0 }
+        D: { presentes: 0, manuales: 0, esperados: 0 },
+        T: { presentes: 0, manuales: 0, esperados: 0 },
+        N: { presentes: 0, manuales: 0, esperados: 0 }
     };
     
     reportes.forEach(reporte => {
         Object.entries(reporte.turnos).forEach(([turno, datos]) => {
-            totales[turno].presentes += datos.presentes;
+            totales[turno].presentes += datos.presentes - datos.manuales; // Registros QR
+            totales[turno].manuales += datos.manuales; // Registros manuales
             totales[turno].esperados += datos.esperados;
         });
     });
     
-    // Actualizar números
-    document.getElementById('dia-cubiertos').textContent = totales.D.presentes;
+    // Actualizar números con desglose
+    document.getElementById('dia-cubiertos').textContent = totales.D.presentes + totales.D.manuales;
+    document.getElementById('dia-qr').textContent = totales.D.presentes;
+    document.getElementById('dia-manual').textContent = totales.D.manuales;
     document.getElementById('dia-total').textContent = totales.D.esperados;
-    document.getElementById('tarde-cubiertos').textContent = totales.T.presentes;
+
+    document.getElementById('tarde-cubiertos').textContent = totales.T.presentes + totales.T.manuales;
+    document.getElementById('tarde-qr').textContent = totales.T.presentes;
+    document.getElementById('tarde-manual').textContent = totales.T.manuales;
     document.getElementById('tarde-total').textContent = totales.T.esperados;
-    document.getElementById('noche-cubiertos').textContent = totales.N.presentes;
+
+    document.getElementById('noche-cubiertos').textContent = totales.N.presentes + totales.N.manuales;
+    document.getElementById('noche-qr').textContent = totales.N.presentes;
+    document.getElementById('noche-manual').textContent = totales.N.manuales;
     document.getElementById('noche-total').textContent = totales.N.esperados;
     
     // Crear gráficos de pie
@@ -899,45 +1092,132 @@ function actualizarDashboard(reportes) {
     const chartIds = ['chartDia', 'chartTarde', 'chartNoche'];
     
     turnos.forEach((turno, index) => {
-        const ctx = document.getElementById(chartIds[index]).getContext('2d');
-        const porcentaje = totales[turno].esperados > 0 ? 
-            (totales[turno].presentes / totales[turno].esperados) * 100 : 0;
-        
-        new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Cubierto', 'Faltante'],
-                datasets: [{
-                    data: [porcentaje, Math.max(0, 100 - porcentaje)],
-                    backgroundColor: [
-                        porcentaje >= 100 ? '#28a745' : 
-                        porcentaje >= 80 ? '#ffc107' : '#dc3545',
-                        '#e9ecef'
-                    ]
-                }]
+    const ctx = document.getElementById(chartIds[index]);
+    const total = totales[turno].esperados;
+    const porcentajeQR = (totales[turno].presentes / total) * 100;
+    const porcentajeManual = (totales[turno].manuales / total) * 100;
+    const porcentajeFaltante = Math.max(0, 100 - porcentajeQR - porcentajeManual);
+    
+    const chart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['QR', 'Eventeros', 'Faltante'],
+            datasets: [{
+                data: [porcentajeQR, porcentajeManual, porcentajeFaltante],
+                backgroundColor: [
+                    '#28a745',
+                    '#FF8C00',
+                    '#e9ecef'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            cutout: '70%',
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: {
+                        usePointStyle: true,
+                        pointStyle: 'circle'
+                    }
+                }
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                cutout: '70%',
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return context.raw.toFixed(1) + '%';
-                            }
-                        }
+            onClick: function(event, elements) {
+                if (elements.length > 0) {
+                    const index = elements[0].index;
+                    const label = this.data.labels[index];
+                    console.log('Click en:', label);
+                    
+                    if (label === 'Faltante') {
+                        filtrarTablaFaltantes(turno);
+                    } else {
+                        mostrarTodasLasFilas();
                     }
                 }
             }
-        });
+        }
     });
+});
 }
 
+// Función para filtrar la tabla
+function filtrarTablaFaltantes(turno) {
+    console.log('Filtrando faltantes para turno:', turno);
+    const tabla = document.querySelector('.resultados-tabla');
+    if (!tabla) {
+        console.log('No se encontró la tabla');
+        return;
+    }
+    
+    const filas = tabla.getElementsByTagName('tr');
+    console.log('Total de filas encontradas:', filas.length);
 
+    // Determinar el índice de la columna según el turno
+    const columnaIndex = turno === 'D' ? 1 : turno === 'T' ? 2 : 3;
+    
+    // Empezar desde 1 para saltar el encabezado
+    for (let i = 1; i < filas.length; i++) {
+        const fila = filas[i];
+        const celdaTurno = fila.cells[columnaIndex];
+        
+        if (celdaTurno) {
+            // Buscar el elemento que contiene el porcentaje
+            const porcentajeElement = celdaTurno.querySelector('.progreso-info span:last-child');
+            if (porcentajeElement) {
+                const porcentajeTexto = porcentajeElement.textContent;
+                const porcentaje = parseFloat(porcentajeTexto);
+                console.log('Fila:', i, 'Porcentaje:', porcentaje);
+                
+                if (porcentaje < 100) {
+                    fila.style.display = '';
+                } else {
+                    fila.style.display = 'none';
+                }
+            }
+        }
+    }
+}
+
+function mostrarTodasLasFilas() {
+    const tabla = document.querySelector('.resultados-tabla');
+    if (!tabla) return;
+    
+    const filas = tabla.getElementsByTagName('tr');
+    for (let i = 1; i < filas.length; i++) {
+        filas[i].style.display = '';
+    }
+}
+
+// Función auxiliar para obtener el índice de la columna según el turno
+function getTurnoIndex(turno) {
+    switch(turno) {
+        case 'D': return 1; // Columna del turno día
+        case 'T': return 2; // Columna del turno tarde
+        case 'N': return 3; // Columna del turno noche
+        default: return 1;
+    }
+}
+
+function abrirRegistroManual() {
+    const modal = document.getElementById('registroManualModal');
+    modal.style.display = 'block';
+
+    // Cerrar modal al hacer clic en X
+    const span = modal.querySelector('.close');
+    span.onclick = function() {
+        modal.style.display = 'none';
+    }
+
+    // Cerrar modal al hacer clic fuera de él
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            modal.style.display = 'none';
+        }
+    }
+}
 
 
 
@@ -1027,6 +1307,8 @@ function crearCeldaProgreso(datos) {
 
     window[callback] = function(response) {
         if (response.success) {
+            console.log('Datos recibidos del backend:', response.data);
+            
             const asistencias = response.data;
             const turnos = {
                 D: [],
@@ -1035,10 +1317,13 @@ function crearCeldaProgreso(datos) {
             };
             
             asistencias.forEach(asistencia => {
+                console.log('Procesando asistencia:', asistencia);
                 if (turnos[asistencia.turno]) {
                     turnos[asistencia.turno].push(asistencia);
                 }
             });
+            
+            console.log('Turnos procesados:', turnos);
             
             modalTitle.textContent = `Detalle de Asistencias - ${unidad}`;
             let contenido = '';
@@ -1050,29 +1335,36 @@ function crearCeldaProgreso(datos) {
                         <h3>Turno ${nombreTurno}</h3>
                         ${turnos[turno].length > 0 ? `
                             <ul class="detalle-lista">
-                                ${turnos[turno].map(a => {
-                                    const fecha = new Date(a.fecha);
-                                    const hora = fecha.toLocaleTimeString('es-MX', {
-                                        hour: '2-digit',
-                                        minute: '2-digit',
-                                        hour12: true
-                                    });
-                                    
-                                    // Solo agregar botón si hay coordenadas
-                                    const botonMapa = a.ubicacion ? `
-                                        <button onclick="abrirMapa('${a.ubicacion}')" class="btn-mapa">
-                                            <i class="fas fa-map-marker-alt"></i>
-                                        </button>
-                                    ` : '';
-                                    
-                                    return `
-                                        <li class="detalle-item">
-                                            <span>${a.usuario}</span>
-                                            <span>${hora}</span>
-                                            ${botonMapa}
-                                        </li>
-                                    `;
-                                }).join('')}
+${turnos[turno].map(a => {
+    console.log('Datos de asistencia:', a); // Para debug
+    
+    const fecha = new Date(a.fecha);
+    const hora = fecha.toLocaleTimeString('es-MX', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+    });
+    
+    // Modificar la condición para el indicador manual
+    const indicadorManual = a.tipoServicio ? 
+        `<span class="registro-manual" title="${a.tipoServicio === 'Cobertura de servicio' ? 'Eventero' : a.tipoServicio}">
+            <i class="fas fa-edit"></i>
+        </span>` : '';
+    
+    const botonMapa = a.ubicacion ? `
+        <button onclick="abrirMapa('${a.ubicacion}')" class="btn-mapa">
+            <i class="fas fa-map-marker-alt"></i>
+        </button>
+    ` : '';
+    
+    return `
+        <li class="detalle-item">
+            <span>${a.usuario}${indicadorManual}</span>
+            <span>${hora}</span>
+            ${botonMapa}
+        </li>
+    `;
+}).join('')}
                             </ul>
                         ` : '<p>No hay registros para este turno</p>'}
                     </div>
@@ -1130,6 +1422,69 @@ document.querySelectorAll('.close').forEach(closeBtn => {
     }
 });
 
+
+function verFaltantes(turno) {
+    const tabla = document.querySelector('.resultados-tabla');
+    if (!tabla) return;
+    
+    const filas = tabla.getElementsByTagName('tr');
+    const boton = document.querySelector(`.btn-faltantes[data-turno="${turno}"]`);
+    const columnaIndex = turno === 'D' ? 1 : turno === 'T' ? 2 : 3;
+    
+    // Si el botón ya está activo, mostrar solo las filas que cumplen con el filtro de búsqueda
+    if (boton.classList.contains('active')) {
+        boton.classList.remove('active');
+        // Aplicar solo el filtro de búsqueda
+        aplicarFiltrosBusqueda();
+    } else {
+        // Desactivar todos los botones
+        document.querySelectorAll('.btn-faltantes').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        
+        // Activar este botón
+        boton.classList.add('active');
+        
+        // Filtrar tabla considerando tanto el filtro de búsqueda como el de faltantes
+        for (let i = 1; i < filas.length; i++) {
+            const fila = filas[i];
+            const celda = fila.cells[columnaIndex];
+            
+            // Solo procesar filas que ya están visibles (respetando el filtro de búsqueda)
+            if (fila.style.display !== 'none') {
+                if (celda) {
+                    const porcentajeElement = celda.querySelector('.progreso-info span:last-child');
+                    if (porcentajeElement) {
+                        const porcentajeTexto = porcentajeElement.textContent;
+                        const porcentaje = parseFloat(porcentajeTexto);
+                        
+                        fila.style.display = porcentaje < 100 ? '' : 'none';
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Función auxiliar para aplicar solo los filtros de búsqueda
+function aplicarFiltrosBusqueda() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const tabla = document.querySelector('.resultados-tabla');
+    if (!tabla) return;
+    
+    const filas = tabla.getElementsByTagName('tr');
+    
+    for (let i = 1; i < filas.length; i++) {
+        const fila = filas[i];
+        const textoFila = fila.textContent.toLowerCase();
+        
+        fila.style.display = textoFila.includes(searchTerm) ? '' : 'none';
+    }
+}
+
     </script>
+
+
+
 </body>
 </html>
