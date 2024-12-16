@@ -189,7 +189,7 @@ function registrarAsistencia(unidad, turno, position) {
                 const horaRegistro = new Date(a.fecha).getHours();
                 let esMismoTurno = false;
                 
-                if (turno === 'D' && horaRegistro >= 5 && horaRegistro < 10) {
+                if (turno === 'D' && horaRegistro >= 5 && horaRegistro < 14) {
                     esMismoTurno = true;
                 } else if (turno === 'T' && horaRegistro >= 14 && horaRegistro < 17) {
                     esMismoTurno = true;
