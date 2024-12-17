@@ -257,7 +257,26 @@
             <i class="fas fa-truck"></i>
             Creación / Asignación de Servicios
         </h2>
-
+        <div class="row mb-3">
+            <div class="col-md-3">
+                <label for="fechaInicio">Fecha Inicio:</label>
+                <input type="date" id="fechaInicio" class="form-control">
+            </div>
+            <div class="col-md-3">
+                <label for="fechaFin">Fecha Fin:</label>
+                <input type="date" id="fechaFin" class="form-control">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button id="filtrarFechas" class="btn btn-primary">
+                    <i class="fas fa-filter"></i> Filtrar
+                </button>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button id="limpiarFiltros" class="btn btn-secondary">
+                    <i class="fas fa-broom"></i> Limpiar
+                </button>
+            </div>
+        </div>
         <button onclick="abrirModalNuevo()" class="btn-nuevo mb-3">
             <i class="fas fa-plus"></i> Nuevo Servicio
         </button>
