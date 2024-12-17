@@ -703,26 +703,67 @@
         const unidad = document.getElementById('unidadFiltro').value;
         const turno = document.getElementById('turnoFiltro').value;
 
-        tabla.columns().every(function() {
-            const column = this;
-            if (column.index() === 0) { // Columna fecha
-                $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
-                    const fecha = data[0];
-                    if (fechaInicio && fecha < fechaInicio) return false;
-                    if (fechaFin && fecha > fechaFin) return false;
-                    return true;
-                });
-            }
-            if (column.index() === 2 && unidad) { // Columna unidad
-                column.search(unidad);
-            }
-            if (column.index() === 3 && turno) { // Columna turno
-                column.search(turno);
-            }
-        });
+        // Limpiar filtros anteriores
+        $.fn.dataTable.ext.search = [];
 
+        // Filtrar por fecha
+       // Filtrar por fecha
+if (fechaInicio || fechaFin) {
+    $.fn.dataTable.ext.search.push(
+        function(settings, data, dataIndex) {
+            let fechaRegistro = data[0]; // Formato: DD/MM/YYYY
+            
+            // Convertir fecha del registro a formato comparable
+            let [dia, mes, anio] = fechaRegistro.split('/');
+            
+            // Crear fecha usando UTC para evitar problemas de zona horaria
+            let fechaRegistroComparable = new Date(Date.UTC(anio, mes - 1, dia));
+            
+            // Convertir fechas de filtro a UTC
+            let fechaInicioObj = null;
+            let fechaFinObj = null;
+
+            if (fechaInicio) {
+                let [anioInicio, mesInicio, diaInicio] = fechaInicio.split('-');
+                fechaInicioObj = new Date(Date.UTC(anioInicio, mesInicio - 1, diaInicio));
+            }
+            
+            if (fechaFin) {
+                let [anioFin, mesFin, diaFin] = fechaFin.split('-');
+                fechaFinObj = new Date(Date.UTC(anioFin, mesFin - 1, diaFin));
+                // Ajustar al final del día en UTC
+                fechaFinObj.setUTCHours(23, 59, 59, 999);
+            }
+
+            // Comparar fechas
+            if (fechaInicioObj && fechaRegistroComparable < fechaInicioObj) {
+                return false;
+            }
+            if (fechaFinObj && fechaRegistroComparable > fechaFinObj) {
+                return false;
+            }
+            return true;
+        }
+    );
+}
+
+        // Aplicar filtros de unidad y turno
+        if (unidad) {
+            tabla.column(2).search(unidad);
+        } else {
+            tabla.column(2).search('');
+        }
+
+        if (turno) {
+            tabla.column(3).search(turno);
+        } else {
+            tabla.column(3).search('');
+        }
+
+        // Redibujar tabla
         tabla.draw();
         
+        // Actualizar dashboard con datos filtrados
         const datosFiltrados = tabla
             .rows({ search: 'applied' })
             .data()
@@ -744,11 +785,16 @@
         // Limpiar filtros personalizados
         $.fn.dataTable.ext.search = [];
 
-        // Redibujar tabla
+        // Redibujar tabla con todos los datos
         tabla.draw();
         
-        // Actualizar dashboard con todos los datos
+        // Actualizar dashboard con todos los datos originales
         actualizarDashboard(datos);
+
+        // Forzar actualización de la vista
+        tabla.columns().every(function() {
+            this.search('').draw();
+        });
     });
 
     // Llenar el select de unidades con datos únicos
@@ -762,7 +808,6 @@
         unidadFiltro.appendChild(option);
     });
 }
-
         function cargarAsistencias() {
             mostrarCargando(true);
             const script = document.createElement('script');
