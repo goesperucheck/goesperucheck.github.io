@@ -13,6 +13,55 @@ $(document).ready(function() {
 
 // Función para inicializar la tabla
 function inicializarTabla() {
+    // Función auxiliar para convertir fecha DD/MM/YYYY a objeto Date y ajustar zona horaria
+    function parseDate(dateStr) {
+        if (!dateStr) return null;
+        const [day, month, year] = dateStr.split('/');
+        const date = new Date(year, month - 1, day);
+        date.setUTCHours(0, 0, 0, 0);
+        return date;
+    }
+
+    // Agregar el filtro personalizado para fechas
+    $.fn.dataTable.ext.search.push(
+        function(settings, data, dataIndex) {
+            var fechaInicio = $('#fechaInicio').val();
+            var fechaFin = $('#fechaFin').val();
+            
+            // Si no hay fechas seleccionadas, mostrar todo
+            if (!fechaInicio && !fechaFin) return true;
+            
+            // Obtener la fecha del registro (columna 1)
+            var fechaServicio = data[1];
+            if (!fechaServicio) return false;
+            
+            try {
+                // Convertir las fechas para comparación
+                var fechaReg = parseDate(fechaServicio);
+                var inicio = fechaInicio ? new Date(fechaInicio + 'T00:00:00') : null;
+                var fin = fechaFin ? new Date(fechaFin + 'T23:59:59') : null;
+                
+                // Para debug
+                console.log('Fecha Registro:', fechaReg);
+                console.log('Fecha Inicio:', inicio);
+                console.log('Fecha Fin:', fin);
+                
+                // Validar el rango de fechas
+                if (inicio && fin) {
+                    return fechaReg >= inicio && fechaReg <= fin;
+                } else if (inicio) {
+                    return fechaReg >= inicio;
+                } else if (fin) {
+                    return fechaReg <= fin;
+                }
+            } catch (e) {
+                console.error('Error en filtro de fechas:', e);
+                return false;
+            }
+            return true;
+        }
+    );
+
     tabla = $('#tablaTransportes').DataTable({
         language: {
             url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json'
@@ -24,9 +73,37 @@ function inicializarTabla() {
                 text: '<i class="fas fa-file-excel"></i> Excel',
                 className: 'btn btn-success',
                 exportOptions: {
-                    columns: [0,1,2,3,4,5,7,8,9,10,11,12,13,14,15,16] // Todas las columnas excepto Acciones
+                    columns: [0,1,2,3,4,5,7,8,9,10,11,12,13,14,15,16]
                 },
-                title: 'Control_de_Transportes'
+                title: 'Control_de_Transportes',
+                customize: function(xlsx) {
+                    var sheet = xlsx.xl.worksheets['sheet1.xml'];
+                    
+                    console.log('Procesando Excel...');
+                    
+                    $('row c[r^="B"]', sheet).each(function() {
+                        console.log('Valor encontrado en columna B:', $(this).text());
+                        console.log('Atributos de la celda:', $(this).attr('r'), $(this).attr('t'));
+                    });
+
+                    $('row c[r^="B"]', sheet).each(function() {
+                        var value = $(this).text();
+                        console.log('Procesando valor:', value);
+                        
+                        if (value && value.trim() !== '') {
+                            try {
+                                $(this).attr('t', 'inlineStr');
+                                var is = xlsx.xl.worksheets['sheet1.xml'].createElement('is');
+                                var t = xlsx.xl.worksheets['sheet1.xml'].createElement('t');
+                                t.textContent = value;
+                                is.appendChild(t);
+                                $(this).empty().append(is);
+                            } catch (e) {
+                                console.error('Error procesando celda:', e);
+                            }
+                        }
+                    });
+                }
             },
             {
                 extend: 'pdf',
@@ -48,15 +125,25 @@ function inicializarTabla() {
         ],
         columnDefs: [
             {
-                targets: [7,8,9,10,11,12,13,14,15,16], // Índices de las columnas ocultas
+                targets: [7,8,9,10,11,12,13,14,15,16],
                 visible: false
             }
         ],
         responsive: true,
-        order: [[1, 'desc']] // Ordenar por fecha de servicio descendente
+        order: [[1, 'desc']]
+    });
+
+    // Eventos para los filtros
+    $('#filtrarFechas').on('click', function() {
+        tabla.draw();
+    });
+
+    $('#limpiarFiltros').on('click', function() {
+        $('#fechaInicio').val('');
+        $('#fechaFin').val('');
+        tabla.draw();
     });
 }
-
 // Funciones de utilidad
 function calcularTotalHoras() {
     const horaCita = document.getElementById('horaCita').value;
@@ -158,8 +245,27 @@ function cargarRegistros() {
 // Callback para manejar la respuesta de registros
 function handleRegistros(response) {
     if (response.success) {
+        const obtenerHora = (valor) => {
+            if (!valor) return '';
+            
+            // Si es una hora simple (formato HH:mm)
+            if (valor.includes(':') && valor.length <= 5) {
+                return valor;
+            }
+            
+            // Si es una fecha ISO
+            if (valor.includes('T')) {
+                const fecha = new Date(valor);
+                const horas = fecha.getUTCHours().toString().padStart(2, '0');
+                const minutos = fecha.getUTCMinutes().toString().padStart(2, '0');
+                return `${horas}:${minutos}`;
+            }
+            
+            return '';
+        };
+
         const datos = response.data.map(registro => {
-            // Formatear la fecha
+            // Formatear fecha
             const fecha = new Date(registro.fechaServicio);
             const fechaFormateada = fecha.toLocaleDateString('es-MX', {
                 year: 'numeric',
@@ -185,11 +291,11 @@ function handleRegistros(response) {
                         <i class="fas fa-user-plus"></i>
                     </button>
                 </div>`,
-                registro.horaCita,
-                registro.horaLlegada,
-                registro.horaInicio,
-                registro.horaFin,
-                registro.totalHoras,
+                obtenerHora(registro.horaCita),
+                obtenerHora(registro.horaLlegada),
+                obtenerHora(registro.horaInicio),
+                obtenerHora(registro.horaFin),
+                obtenerHora(registro.totalHoras),
                 registro.placaTransporte,
                 registro.numeroContenedor,
                 registro.solicitante,
@@ -200,7 +306,6 @@ function handleRegistros(response) {
 
         tabla.clear().rows.add(datos).draw();
     } else {
-        console.error('Error al cargar registros:', response.message);
         mostrarError('Error al cargar los registros');
     }
 }
@@ -251,59 +356,49 @@ document.getElementById('transporteForm').addEventListener('submit', function(e)
 // Callback para manejar la respuesta del registro de transporte
 function handleRegistroTransporte(response) {
     if (response.success) {
-        cerrarModal('modalTransporte');
-        cargarRegistros();
-        mostrarMensaje('Registro guardado exitosamente');
+        const mensaje = document.getElementById('modoEdicion').value === 'editar' 
+            ? 'Registro actualizado exitosamente' 
+            : 'Registro guardado exitosamente';
+        
+        // Guardar los valores del formulario antes de cerrar
+        const formValues = {
+            fechaServicio: document.getElementById('fechaServicio').value,
+            liderEquipo: document.getElementById('liderEquipo').value,
+            cliente: document.getElementById('cliente').value,
+            puntoInicial: document.getElementById('puntoInicial').value,
+            puntoDestino: document.getElementById('puntoDestino').value,
+            horaCita: document.getElementById('horaCita').value,
+            horaLlegada: document.getElementById('horaLlegada').value,
+            horaInicio: document.getElementById('horaInicio').value,
+            horaFin: document.getElementById('horaFin').value,
+            totalHoras: document.getElementById('totalHoras').value,
+            placaTransporte: document.getElementById('placaTransporte').value,
+            numeroContenedor: document.getElementById('numeroContenedor').value,
+            solicitante: document.getElementById('solicitante').value,
+            tipoServicio: document.getElementById('tipoServicio').value,
+            zona: document.getElementById('zona').value
+        };
+        
+        Swal.fire({
+            icon: 'success',
+            title: 'Éxito',
+            text: mensaje
+        }).then(() => {
+            cargarRegistros();
+            cerrarModal('modalTransporte');
+            
+            // Restaurar los valores si es necesario
+            if (document.getElementById('modoEdicion').value === 'nuevo') {
+                Object.keys(formValues).forEach(key => {
+                    if (document.getElementById(key)) {
+                        document.getElementById(key).value = formValues[key];
+                    }
+                });
+            }
+        });
     } else {
         mostrarError(response.message || 'Error al guardar el registro');
     }
-}
-
-// Manejo del formulario de resguardos
-document.getElementById('resguardosForm').addEventListener('submit', (e) => {
-    e.preventDefault();
-    
-    const ordenTransporte = document.getElementById('ordenTransporteResguardo').value;
-    const resguardos = Array.from(document.querySelectorAll('.resguardo-select select'))
-                           .map(select => select.value)
-                           .filter(value => value);
-
-    if (resguardos.length === 0) {
-        mostrarError('Debe seleccionar al menos un resguardo');
-        return;
-    }
-
-    const datos = {
-        ordenTransporte,
-        resguardos
-    };
-
-    const script = document.createElement('script');
-    const callback = 'handleAsignacionResguardos';
-    script.src = `${API_URL}?action=asignarResguardos&datos=${encodeURIComponent(JSON.stringify(datos))}&callback=${callback}`;
-    document.body.appendChild(script);
-    script.onload = function() {
-        document.body.removeChild(script);
-    };
-});
-
-// Callback para manejar la respuesta de asignación de resguardos
-function handleAsignacionResguardos(response) {
-    if (response.success) {
-        cerrarModal('modalResguardos');
-        mostrarMensaje('Resguardos asignados exitosamente');
-    } else {
-        mostrarError(response.message || 'Error al asignar resguardos');
-    }
-}
-
-// Funciones para mostrar mensajes
-function mostrarError(mensaje) {
-    Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: mensaje
-    });
 }
 
 function mostrarMensaje(mensaje) {
@@ -390,46 +485,64 @@ function editarTransporte(ordenTransporte) {
 
 // Callback para cargar datos en el modal de edición
 function handleObtenerTransporteEditar(response) {
-    console.log('Respuesta edición:', response);
     if (response.success) {
         const datos = response.data;
         
-        // Indicar que estamos en modo edición
-        document.getElementById('modoEdicion').value = 'editar';
-        
-        // Función auxiliar para manejar valores nulos o vacíos
-        const setValueOrEmpty = (elementId, value) => {
-            const element = document.getElementById(elementId);
-            element.value = value || '';
+        // Función mejorada para extraer hora
+        const obtenerHora = (valor) => {
+            if (!valor) return '';
+            
+            // Si es una hora simple (formato HH:mm)
+            if (valor.includes(':') && valor.length <= 5) {
+                return valor;
+            }
+            
+            // Si es una fecha ISO
+            if (valor.includes('T')) {
+                const fecha = new Date(valor);
+                const horas = fecha.getUTCHours().toString().padStart(2, '0');
+                const minutos = fecha.getUTCMinutes().toString().padStart(2, '0');
+                return `${horas}:${minutos}`;
+            }
+            
+            return '';
         };
-        
-        // Llenar el formulario con los datos existentes
-        setValueOrEmpty('ordenTransporte', datos.ordenTransporte);
+
+        // Log para depuración
+        console.log('Procesando datos:', {
+            horaCitaOriginal: datos.horaCita,
+            horaCitaFormateada: obtenerHora(datos.horaCita)
+        });
+
+        // Establecer valores en el formulario
+        document.getElementById('ordenTransporte').value = datos.ordenTransporte;
         document.getElementById('ordenTransporte').readOnly = true;
         
-        setValueOrEmpty('fechaServicio', datos.fechaServicio ? datos.fechaServicio.split('T')[0] : '');
-        setValueOrEmpty('liderEquipo', datos.liderEquipo);
-        setValueOrEmpty('cliente', datos.cliente);
-        setValueOrEmpty('puntoInicial', datos.puntoInicial);
-        setValueOrEmpty('puntoDestino', datos.puntoDestino);
-        setValueOrEmpty('horaCita', datos.horaCita);
-        setValueOrEmpty('horaLlegada', datos.horaLlegada);
-        setValueOrEmpty('horaInicio', datos.horaInicio);
-        setValueOrEmpty('horaFin', datos.horaFin);
-        setValueOrEmpty('totalHoras', datos.totalHoras);
-        setValueOrEmpty('placaTransporte', datos.placaTransporte);
-        setValueOrEmpty('numeroContenedor', datos.numeroContenedor);
-        setValueOrEmpty('solicitante', datos.solicitante);
-        setValueOrEmpty('tipoServicio', datos.tipoServicio);
-        setValueOrEmpty('zona', datos.zona);
-
-        // Cambiar el título del modal
-        document.querySelector('#modalTransporte h3').textContent = 'Editar Transporte';
+        // Establecer fecha
+        document.getElementById('fechaServicio').value = datos.fechaServicio.split('T')[0];
         
-        // Abrir el modal
+        // Establecer horas
+        document.getElementById('horaCita').value = obtenerHora(datos.horaCita);
+        document.getElementById('horaLlegada').value = obtenerHora(datos.horaLlegada);
+        document.getElementById('horaInicio').value = obtenerHora(datos.horaInicio);
+        document.getElementById('horaFin').value = obtenerHora(datos.horaFin);
+        document.getElementById('totalHoras').value = obtenerHora(datos.totalHoras);
+        
+        // Establecer otros campos
+        document.getElementById('liderEquipo').value = datos.liderEquipo || '';
+        document.getElementById('cliente').value = datos.cliente || '';
+        document.getElementById('puntoInicial').value = datos.puntoInicial || '';
+        document.getElementById('puntoDestino').value = datos.puntoDestino || '';
+        document.getElementById('placaTransporte').value = datos.placaTransporte || '';
+        document.getElementById('numeroContenedor').value = datos.numeroContenedor || '';
+        document.getElementById('solicitante').value = datos.solicitante || '';
+        document.getElementById('tipoServicio').value = datos.tipoServicio || '';
+        document.getElementById('zona').value = datos.zona || '';
+
+        // Mostrar modal
+        document.querySelector('#modalTransporte h3').textContent = 'Editar Transporte';
         document.getElementById('modalTransporte').style.display = 'block';
     } else {
-        console.error('Error en handleObtenerTransporteEditar:', response);
         mostrarError('Error al cargar los datos para editar');
     }
 }
@@ -475,13 +588,112 @@ function handleObtenerTransporteEditar(response) {
 // Callback para manejar la respuesta del registro/actualización
 function handleRegistroTransporte(response) {
     if (response.success) {
-        cerrarModal('modalTransporte');
-        cargarRegistros();
-        const mensaje = document.getElementById('modoEdicion').value === 'editar' 
+        const modoEdicion = document.getElementById('modoEdicion').value;
+        const mensaje = modoEdicion === 'editar' 
             ? 'Registro actualizado exitosamente' 
             : 'Registro guardado exitosamente';
-        mostrarMensaje(mensaje);
+        
+        // Guardar los valores actuales del formulario
+        const formValues = {
+            fechaServicio: document.getElementById('fechaServicio').value,
+            horaCita: document.getElementById('horaCita').value,
+            horaLlegada: document.getElementById('horaLlegada').value,
+            horaInicio: document.getElementById('horaInicio').value,
+            horaFin: document.getElementById('horaFin').value,
+            totalHoras: document.getElementById('totalHoras').value
+            // ... otros campos si es necesario
+        };
+
+        Swal.fire({
+            icon: 'success',
+            title: 'Éxito',
+            text: mensaje,
+            allowOutsideClick: false
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Primero actualizar la tabla
+                cargarRegistros();
+                
+                // Luego cerrar el modal
+                cerrarModal('modalTransporte');
+                
+                // Finalmente, si estamos en modo edición, restaurar los valores
+                if (modoEdicion === 'editar') {
+                    setTimeout(() => {
+                        document.getElementById('fechaServicio').value = formValues.fechaServicio;
+                        document.getElementById('horaCita').value = formValues.horaCita;
+                        document.getElementById('horaLlegada').value = formValues.horaLlegada;
+                        document.getElementById('horaInicio').value = formValues.horaInicio;
+                        document.getElementById('horaFin').value = formValues.horaFin;
+                        document.getElementById('totalHoras').value = formValues.totalHoras;
+                    }, 100);
+                }
+            }
+        });
     } else {
         mostrarError(response.message || 'Error al procesar el registro');
     }
+}
+
+// AGREGAR ESTAS FUNCIONES AQUÍ
+
+// Manejo del formulario de resguardos
+document.getElementById('resguardosForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    
+    const ordenTransporte = document.getElementById('ordenTransporteResguardo').value;
+    const resguardos = Array.from(document.querySelectorAll('.resguardo-select select'))
+                           .map(select => select.value)
+                           .filter(value => value);
+
+    if (resguardos.length === 0) {
+        mostrarError('Debe seleccionar al menos un resguardo');
+        return;
+    }
+
+    const datos = {
+        ordenTransporte,
+        resguardos
+    };
+
+    const script = document.createElement('script');
+    const callback = 'handleAsignacionResguardos';
+    script.src = `${API_URL}?action=asignarResguardos&datos=${encodeURIComponent(JSON.stringify(datos))}&callback=${callback}`;
+    document.body.appendChild(script);
+    script.onload = function() {
+        document.body.removeChild(script);
+    };
+});
+
+// Callback para manejar la respuesta de asignación de resguardos
+function handleAsignacionResguardos(response) {
+    if (response.success) {
+        Swal.fire({
+            icon: 'success',
+            title: 'Éxito',
+            text: 'Resguardos asignados exitosamente'
+        }).then(() => {
+            cerrarModal('modalResguardos');
+            cargarRegistros();
+        });
+    } else {
+        mostrarError(response.message || 'Error al asignar resguardos');
+    }
+}
+
+// Funciones para mostrar mensajes
+function mostrarError(mensaje) {
+    Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: mensaje
+    });
+}
+
+function mostrarMensaje(mensaje) {
+    Swal.fire({
+        icon: 'success',
+        title: 'Éxito',
+        text: mensaje
+    });
 }
