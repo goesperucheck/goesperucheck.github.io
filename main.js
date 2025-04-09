@@ -1,10 +1,10 @@
 // Definir la configuración de accesos por rol
 const ROLE_ACCESS = {
-    'PERSONAL DE SEGURIDAD': ['registro.html', 'ronda_interna.html'],
+    'PERSONAL DE SEGURIDAD': ['registro.html', 'ronda_interna.html', 'visitas_domiciliarias'],
     'SUPERVISOR': ['registro.html', 'ronda.html', 'ronda_interna.html', 'reporteResguardo.html'],
-    'OPERADOR': ['registro.html', 'control_unidades.html', 'control_rondas.html', 'control_rondas_internas.html', 'admin_unidades.html', 'admin_puntos_ronda.html', 'reporteResguardo.html', 'transporte.html', 'controlcustodias.html', 'control_asistencias.html', 'cat.html'],
-    'COORDINADOR': ['registro.html', 'control_unidades.html', 'control_rondas.html', 'control_rondas_internas.html', 'reporteResguardo.html', 'ronda_coordinador.html', 'admin_puntos_ronda.html', 'control_asistencias.html'],
-    'ADMINISTRADOR': ['registro.html', 'ronda.html', 'ronda_interna.html', 'control_unidades.html', 'admin_unidades.html', 'control_rondas.html', 'control_rondas_internas.html', 'admin_puntos_ronda.html', 'reporteResguardo.html', 'transporte.html', 'controlcustodias.html', 'ronda_coordinador.html','control_ronda_coordinador.html', 'control_asistencias.html', 'cat.html'],
+    'OPERADOR': ['registro.html', 'control_unidades.html', 'control_rondas.html', 'control_rondas_internas.html', 'admin_unidades.html', 'admin_puntos_ronda.html', 'reporteResguardo.html', 'transporte.html', 'controlcustodias.html', 'control_asistencias.html', 'cat.html', 'visitas_domiciliarias'],
+    'COORDINADOR': ['registro.html', 'control_unidades.html', 'control_rondas.html', 'control_rondas_internas.html', 'reporteResguardo.html', 'ronda_coordinador.html', 'admin_puntos_ronda.html', 'control_asistencias.html', 'visitas_domiciliarias'],
+    'ADMINISTRADOR': ['registro.html', 'ronda.html', 'ronda_interna.html', 'control_unidades.html', 'admin_unidades.html', 'control_rondas.html', 'control_rondas_internas.html', 'admin_puntos_ronda.html', 'reporteResguardo.html', 'transporte.html', 'controlcustodias.html', 'ronda_coordinador.html','control_ronda_coordinador.html', 'control_asistencias.html', 'cat.html', 'visitas_domiciliarias'],
     'COMERCIAL': ['transporte.html', 'controlcustodias.html'],
     'RESGUARDO': ['reporteResguardo.html']
 };
@@ -85,6 +85,13 @@ const MENU_ITEMS = {
         icon: 'fas fa-truck-moving',
         title: 'Control de Activos en Tránsito',
         description: 'Monitoreo y control de activos en movimiento'
+    },
+    'visitas_domiciliarias': {
+        icon: 'fas fa-home',
+        title: 'Confirmación Domiciliaria',
+        description: 'Registro y control de visitas domiciliarias',
+        externalUrl: 'https://goesvdomiciliaria.github.io/',
+        newTab: true
     }
 };
 
@@ -295,24 +302,13 @@ function showMenu() {
     updateNavButtons(true);
 }
 
-function loadFrame(url) {
-    const frame = document.getElementById('contentFrame');
-    const menuContent = document.getElementById('menuContent');
-    
-    frame.style.display = 'block';
-    frame.style.width = '100%';
-    frame.style.height = '100%';
-    frame.classList.add('active');
-    menuContent.style.display = 'none';
-    
-    frame.src = url;
-    
-    frame.onload = function() {
-        console.log('Frame cargado:', url);
-        frame.style.visibility = 'visible';
-    };
-
-    updateNavButtons(false);
+function loadFrame(page) {
+    const menuItem = MENU_ITEMS[page];
+    if (menuItem && menuItem.externalUrl && menuItem.newTab) {
+        window.open(menuItem.externalUrl, '_blank');
+    } else {
+        document.getElementById('content-frame').src = page;
+    }
 }
 
 function logout() {
