@@ -1,12 +1,12 @@
 // Definir la configuración de accesos por rol
 const ROLE_ACCESS = {
-    'PERSONAL DE SEGURIDAD': ['registro.html', 'ronda_interna.html', 'visitas_domiciliarias'],
-    'SUPERVISOR': ['registro.html', 'ronda.html', 'ronda_interna.html', 'reporteResguardo.html'],
-    'OPERADOR': ['registro.html', 'control_unidades.html', 'control_rondas.html', 'control_rondas_internas.html', 'admin_unidades.html', 'admin_puntos_ronda.html', 'reporteResguardo.html', 'transporte.html', 'controlcustodias.html', 'control_asistencias.html', 'cat.html', 'visitas_domiciliarias'],
-    'COORDINADOR': ['registro.html', 'control_unidades.html', 'control_rondas.html', 'control_rondas_internas.html', 'reporteResguardo.html', 'ronda_coordinador.html', 'admin_puntos_ronda.html', 'control_asistencias.html', 'visitas_domiciliarias'],
-    'ADMINISTRADOR': ['registro.html', 'ronda.html', 'ronda_interna.html', 'control_unidades.html', 'admin_unidades.html', 'control_rondas.html', 'control_rondas_internas.html', 'admin_puntos_ronda.html', 'reporteResguardo.html', 'transporte.html', 'controlcustodias.html', 'ronda_coordinador.html','control_ronda_coordinador.html', 'control_asistencias.html', 'cat.html', 'visitas_domiciliarias'],
-    'COMERCIAL': ['transporte.html', 'controlcustodias.html'],
-    'RESGUARDO': ['reporteResguardo.html']
+    'PERSONAL DE SEGURIDAD': ['registro.html', 'ronda_interna.html', 'https://goesvdomiciliaria.github.io/'],
+    'SUPERVISOR': ['registro.html', 'ronda.html', 'ronda_interna.html', 'reporteResguardo.html', 'https://goesvdomiciliaria.github.io/'],
+    'OPERADOR': ['registro.html', 'control_unidades.html', 'control_rondas.html', 'control_rondas_internas.html', 'admin_unidades.html', 'admin_puntos_ronda.html', 'reporteResguardo.html', 'transporte.html', 'controlcustodias.html', 'control_asistencias.html', 'cat.html', 'https://goesvdomiciliaria.github.io/'],
+    'COORDINADOR': ['registro.html', 'control_unidades.html', 'control_rondas.html', 'control_rondas_internas.html', 'reporteResguardo.html', 'ronda_coordinador.html', 'admin_puntos_ronda.html', 'control_asistencias.html', 'https://goesvdomiciliaria.github.io/'],
+    'ADMINISTRADOR': ['registro.html', 'ronda.html', 'ronda_interna.html', 'control_unidades.html', 'admin_unidades.html', 'control_rondas.html', 'control_rondas_internas.html', 'admin_puntos_ronda.html', 'reporteResguardo.html', 'transporte.html', 'controlcustodias.html', 'ronda_coordinador.html','control_ronda_coordinador.html', 'control_asistencias.html', 'cat.html', 'https://goesvdomiciliaria.github.io/'],
+    'COMERCIAL': ['transporte.html', 'controlcustodias.html', 'https://goesvdomiciliaria.github.io/'],
+    'RESGUARDO': ['reporteResguardo.html', 'https://goesvdomiciliaria.github.io/']
 };
 
 // Mapeo de URLs a información del menú
@@ -86,12 +86,10 @@ const MENU_ITEMS = {
         title: 'Control de Activos en Tránsito',
         description: 'Monitoreo y control de activos en movimiento'
     },
-    'visitas_domiciliarias': {
+    'https://goesvdomiciliaria.github.io/': {
         icon: 'fas fa-home',
         title: 'Confirmación Domiciliaria',
-        description: 'Registro y control de visitas domiciliarias',
-        externalUrl: 'https://goesvdomiciliaria.github.io/',
-        newTab: true
+        description: 'Registro y control de visitas domiciliarias'
     }
 };
 
@@ -302,13 +300,30 @@ function showMenu() {
     updateNavButtons(true);
 }
 
-function loadFrame(page) {
-    const menuItem = MENU_ITEMS[page];
-    if (menuItem && menuItem.externalUrl && menuItem.newTab) {
-        window.open(menuItem.externalUrl, '_blank');
-    } else {
-        document.getElementById('content-frame').src = page;
+function loadFrame(url) {
+    const frame = document.getElementById('contentFrame');
+    const menuContent = document.getElementById('menuContent');
+    
+    // Si es una URL externa (comienza con http o https)
+    if (url.startsWith('http')) {
+        window.open(url, '_blank');
+        return;
     }
+    
+    frame.style.display = 'block';
+    frame.style.width = '100%';
+    frame.style.height = '100%';
+    frame.classList.add('active');
+    menuContent.style.display = 'none';
+    
+    frame.src = url;
+    
+    frame.onload = function() {
+        console.log('Frame cargado:', url);
+        frame.style.visibility = 'visible';
+    };
+
+    updateNavButtons(false);
 }
 
 function logout() {
